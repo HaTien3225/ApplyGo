@@ -1,0 +1,13 @@
+.hero-section form {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.hero-section .form-control,
+.hero-section .form-select {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+.hero-section button {
+  border-radius: 10px;
+  font-weight: 600;
+}

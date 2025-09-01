@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap JS & Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/alert.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/body.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/btn.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/carousel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/fixed-search.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/form.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Css/hero_section.css') }}">
+
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='JavaScript/DateTime.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='JavaScript/toggleSearch.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='JavaScript/load_info_user.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='JavaScript/lazy_load.js') }}" defer></script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='Image/job.ico') }}" type="image/x-icon">
+
+    <title>{% block title %}ApplyGO - Việc làm trực tuyến{% endblock %}</title>
+</head>
+<body>
+    <!-- HEADER -->
+    {% block header %}
+        {% include 'layout/header.html' %}
+    {% endblock %}
+
+    <!-- FLASH MESSAGES -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    {% block content %}{% endblock %}
+
+    <!-- FOOTER -->
+    {% block footer %}
+        {% include 'layout/footer.html' %}
+    {% endblock %}
+</body>
+</html>
