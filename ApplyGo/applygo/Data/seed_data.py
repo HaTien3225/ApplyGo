@@ -92,7 +92,7 @@ def seed_large():
                     description=f"Job description for Job {j} at {company.name}",
                     location=random.choice(["Hanoi", "Ho Chi Minh", "Da Nang"]),
                     salary=f"{15+j*5}-{20+j*5} triệu",
-                    created_at=datetime.utcnow() - timedelta(days=created_offset)
+                    created_at=datetime.now() - timedelta(days=created_offset)
                 )
                 db.session.add(job)
                 db.session.commit()
@@ -106,7 +106,7 @@ def seed_large():
                     candidate_profile_id=candidate.id,
                     job_id=job.id,
                     status=random.choice(list(ApplicationStatus)),
-                    applied_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
+                    applied_at=datetime.now() - timedelta(days=random.randint(0, 30))
                 )
                 db.session.add(application)
         db.session.commit()
