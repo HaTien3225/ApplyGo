@@ -1,10 +1,10 @@
 from applygo import db, app
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 
-
-def seed_data():
+def seed_large():
     try:
         # Xóa dữ liệu cũ
         db.session.query(Application).delete()
@@ -13,90 +13,110 @@ def seed_data():
         db.session.query(CandidateProfile).delete()
         db.session.query(User).delete()
 
-        # --- Tạo Users ---
+        # --- Tạo Admin ---
         admin = User(
             username="admin",
             email="admin@example.com",
             password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-            role="admin"
+            role=UserRole.ADMIN
         )
-
-        candidate_user = User(
-            username="nguyenvana",
-            email="vana@example.com",
-            password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-            role="candidate"
-        )
-
-        company_user = User(
-            username="techcorp",
-            email="hr@techcorp.com",
-            password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-            role="company"
-        )
-
-        db.session.add_all([admin, candidate_user, company_user])
+        db.session.add(admin)
         db.session.commit()
 
-        # --- Tạo CandidateProfile ---
-        candidate_profile = CandidateProfile(
-            user_id=candidate_user.id,
-            full_name="Nguyen Van A",
-            phone="0123456789",
-            skills="Python, Flask, SQLAlchemy",
-            experience="2 years Backend Developer",
-            education="Bachelor of Computer Science"
-        )
-        db.session.add(candidate_profile)
+        # --- Tạo 20 ứng viên ---
+        candidates = []
+        skills_list = [
+            "Python, Flask, SQLAlchemy",
+            "Java, Spring Boot",
+            "JavaScript, ReactJS",
+            "C#, .NET",
+            "Ruby on Rails",
+            "Go, Docker, Kubernetes",
+            "PHP, Laravel",
+            "Node.js, Express",
+            "Machine Learning, Python",
+            "Data Analysis, Python, SQL"
+        ]
+        for i in range(1, 21):
+            user = User(
+                username=f"user{i}",
+                email=f"user{i}@example.com",
+                password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
+                role=UserRole.CANDIDATE
+            )
+            db.session.add(user)
+            db.session.commit()
+
+            profile = CandidateProfile(
+                user_id=user.id,
+                full_name=f"Candidate {i}",
+                phone=f"0900{str(i).zfill(4)}",
+                skills=random.choice(skills_list),
+                experience=f"{random.randint(1,10)} years experience",
+                education="Bachelor of Computer Science"
+            )
+            db.session.add(profile)
+            db.session.commit()
+            candidates.append(profile)
+
+        # --- Tạo 10 công ty ---
+        companies = []
+        for i in range(1, 11):
+            user = User(
+                username=f"company{i}",
+                email=f"company{i}@example.com",
+                password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
+                role=UserRole.COMPANY
+            )
+            db.session.add(user)
+            db.session.commit()
+
+            company = Company(
+                user_id=user.id,
+                name=f"Company {i}",
+                address=f"{i*10} Nguyen Trai, Hanoi",
+                website=f"www.company{i}.com"
+            )
+            db.session.add(company)
+            db.session.commit()
+            companies.append(company)
+
+        # --- Tạo 50 job (mỗi công ty 5 job) ---
+        jobs = []
+        for company in companies:
+            for j in range(1, 6):
+                created_offset = random.randint(0, 30)
+                job = Job(
+                    company_id=company.id,
+                    title=f"Job {j} at {company.name}",
+                    description=f"Job description for Job {j} at {company.name}",
+                    location=random.choice(["Hanoi", "Ho Chi Minh", "Da Nang"]),
+                    salary=f"{15+j*5}-{20+j*5} triệu",
+                    created_at=datetime.utcnow() - timedelta(days=created_offset)
+                )
+                db.session.add(job)
+                db.session.commit()
+                jobs.append(job)
+
+        # --- Tạo hồ sơ ứng tuyển ngẫu nhiên ---
+        for candidate in candidates:
+            applied_jobs = random.sample(jobs, k=5)
+            for job in applied_jobs:
+                application = Application(
+                    candidate_profile_id=candidate.id,
+                    job_id=job.id,
+                    status=random.choice(list(ApplicationStatus)),
+                    applied_at=datetime.utcnow() - timedelta(days=random.randint(0, 30))
+                )
+                db.session.add(application)
         db.session.commit()
 
-        # --- Tạo Company ---
-        company = Company(
-            user_id=company_user.id,
-            name="TechCorp",
-            address="123 Hoang Quoc Viet, Hanoi"
-        )
-        db.session.add(company)
-        db.session.commit()
-
-        # --- Tạo Job ---
-        job1 = Job(
-            company_id=company.id,
-            title="Backend Developer",
-            description="Phát triển hệ thống API cho ứng dụng web.",
-            location="Hanoi",
-            salary="20-25 triệu",
-            created_at=datetime.utcnow()
-        )
-        job2 = Job(
-            company_id=company.id,
-            title="Frontend Developer",
-            description="Phát triển giao diện ReactJS.",
-            location="Hanoi",
-            salary="18-22 triệu",
-            created_at=datetime.utcnow()
-        )
-
-        db.session.add_all([job1, job2])
-        db.session.commit()
-
-        # --- Tạo Application ---
-        application = Application(
-            candidate_profile_id=candidate_profile.id,
-            job_id=job1.id,
-            status=ApplicationStatus.PENDING,
-            applied_at=datetime.utcnow()
-        )
-        db.session.add(application)
-        db.session.commit()
-
-        print("✅ Dữ liệu mẫu đã được tạo thành công!")
+        print("✅ Dữ liệu siêu lớn đã được tạo thành công!")
 
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Lỗi khi tạo dữ liệu mẫu: {e}")
-
+        print(f"❌ Lỗi khi tạo dữ liệu siêu lớn: {e}")
 
 if __name__ == "__main__":
     with app.app_context():
-        seed_data()
+        seed_large()
