@@ -6,24 +6,28 @@ from applygo import db, app
 
 
 class UserRole(Enum):
+    __table_args__ = {'extend_existing': True}
     CANDIDATE = "candidate"
     COMPANY = "company"
     ADMIN = "admin"
 
 
 class ApplicationStatus(Enum):
+    __table_args__ = {'extend_existing': True}
     PENDING = "Pending"
     ACCEPTED = "Accepted"
     REJECTED = "Rejected"
 
 
 class JobStatus(Enum):
+    __table_args__ = {'extend_existing': True}
     OPEN = "Open"
     CLOSED = "Closed"
     PAUSED = "Paused"
 
 
 class User(db.Model, UserMixin):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -50,6 +54,7 @@ class User(db.Model, UserMixin):
 
 
 class CandidateProfile(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
@@ -68,6 +73,7 @@ class CandidateProfile(db.Model):
 
 
 class Company(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -84,6 +90,7 @@ class Company(db.Model):
 
 
 class Job(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"), nullable=False)
     title = db.Column(db.String(200), nullable=False)
@@ -102,6 +109,7 @@ class Job(db.Model):
 
 
 class Application(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
@@ -117,6 +125,7 @@ class Application(db.Model):
 
 
 class ActivityLog(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     action = db.Column(db.String(255), nullable=False)
