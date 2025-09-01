@@ -35,7 +35,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.CANDIDATE)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    image_url = db.Column(db.String(500))
+    image_url = db.Column(db.String(500), nullable=True)
     candidate_profile = db.relationship("CandidateProfile", back_populates="user", uselist=False)
     company = db.relationship("Company", back_populates="user", uselist=False)
     activities = db.relationship("ActivityLog", back_populates="user", cascade="all, delete-orphan")
@@ -81,7 +81,7 @@ class Company(db.Model):
     website = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    logo_url = db.Column(db.String(500))
+    logo_url = db.Column(db.String(500), nullable=True)
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
 
