@@ -1,0 +1,34 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+{% if current_user.is_authenticated %}
+<h1>Xin chào, {{ current_user.username }} 👋</h1>
+<p>Chào mừng bạn quay lại trang quản trị <b>ApplyGO</b>!</p>
+{% else %}
+<h1 class="text-center text-primary mt-1">ĐĂNG NHẬP QUẢN TRỊ HỆ THỐNG APPLYGO</h1>
+
+{% if err_msg %}
+<div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+
+<form method="post" action="/login-admin" class="mt-4">
+    <div class="form-group mb-3">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" class="form-control" id="username" placeholder="Tên đăng nhập"
+               name="username" pattern="[a-zA-Z0-9]*" required>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="password">Mật khẩu</label>
+        <input type="password" class="form-control" id="password" placeholder="Mật khẩu"
+               name="password" required>
+    </div>
+
+    <div class="form-group mt-3 mb-3 text-center">
+        <button class="btn btn-success px-4" type="submit">Đăng nhập</button>
+    </div>
+</form>
+{% endif %}
+
+{% endblock %}
