@@ -1,33 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="0af5ed71-c451-47f6-9c0c-4d6482afe456" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ApplyGo/applygo/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ApplyGo/applygo/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ApplyGo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ApplyGo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/admin/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/admin/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/auth/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/auth/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/auth/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/auth/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/layout/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/layout/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/layout/footer.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/layout/footer.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/layout/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/layout/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/Templates/page/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/Templates/page/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/_init_.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/dao.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/dao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/decorators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApplyGo/applygo/index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApplyGo/models.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "HaTien3225"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;HaTien3225&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/HaTien3225/ApplyGo.git",
-    "accountId": "3b499d94-7dd7-43f2-b685-6854f11a4d91"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/HaTien3225/ApplyGo.git&quot;,
+    &quot;accountId&quot;: &quot;3b499d94-7dd7-43f2-b685-6854f11a4d91&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 0
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="31zzXtwjQ5dBnZsJKA7pEXoMzZV" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -35,11 +62,73 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python._init_.executor": "Run",
+    "Python.models.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/ApplyGo/ApplyGo"
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev-Tien",
+    "last_opened_file_path": "D:/ApplyGo/ApplyGo",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\ApplyGo\ApplyGo" />
+      <recent name="D:\ApplyGo\ApplyGo\applygo" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.models">
+    <configuration name="_init_" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="ApplyGo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ApplyGo" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="D:\ApplyGo\ApplyGo\applygo\_init_.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="models" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="ApplyGo" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ApplyGo" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="D:\ApplyGo\ApplyGo\applygo\models.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.models" />
+        <item itemvalue="Python._init_" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
