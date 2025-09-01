@@ -33,9 +33,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.CANDIDATE)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    image_url = db.Column(db.String(500))
     candidate_profile = db.relationship("CandidateProfile", back_populates="user", uselist=False)
     company = db.relationship("Company", back_populates="user", uselist=False)
     activities = db.relationship("ActivityLog", back_populates="user", cascade="all, delete-orphan")
@@ -62,8 +62,8 @@ class CandidateProfile(db.Model):
     skills = db.Column(db.Text, nullable=True)
     experience = db.Column(db.Text, nullable=True)
     education = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     user = db.relationship("User", back_populates="candidate_profile")
     applications = db.relationship("Application", back_populates="candidate_profile", cascade="all, delete-orphan")
@@ -79,9 +79,9 @@ class Company(db.Model):
     name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(255), nullable=True)
     website = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    logo_url = db.Column(db.String(500))
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
 
@@ -98,8 +98,8 @@ class Job(db.Model):
     location = db.Column(db.String(100), nullable=True)
     salary = db.Column(db.String(50), nullable=True)
     status = db.Column(db.Enum(JobStatus), default=JobStatus.OPEN)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     company = db.relationship("Company", back_populates="jobs")
     applications = db.relationship("Application", back_populates="job", cascade="all, delete-orphan")
@@ -114,8 +114,8 @@ class Application(db.Model):
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
     status = db.Column(db.Enum(ApplicationStatus), default=ApplicationStatus.PENDING)
-    applied_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    applied_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     candidate_profile = db.relationship("CandidateProfile", back_populates="applications")
     job = db.relationship("Job", back_populates="applications")
@@ -129,7 +129,7 @@ class ActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     action = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     user = db.relationship("User", back_populates="activities")
 
