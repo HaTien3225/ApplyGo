@@ -60,7 +60,7 @@
         </ul>
 
         <!-- Nút Tạo mới -->
-        <a href="/tao-moi" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
+        <a href="/recruitment-post/create" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
     </form>
 
     <!-- Content -->
@@ -80,7 +80,7 @@
                                 <i class="bi bi-clock"></i> Đăng vào : {{ company_job.created_at }}
                             </p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <a href="" class="btn btn-outline-success btn-sm">Quản lý</a>
+                                <a href="{{ url_for('recruitment_post_detail', id=company_job.id) }}" class="btn btn-outline-success btn-sm">Quản lý</a>
                             </div>
                         </div>
                     </div>
