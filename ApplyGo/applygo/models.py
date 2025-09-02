@@ -84,6 +84,8 @@ class Company(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     logo_url = db.Column(db.String(500), nullable=True)
+    mst = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.Enum(CompanyStatus), default=CompanyStatus.PENDING)
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
 

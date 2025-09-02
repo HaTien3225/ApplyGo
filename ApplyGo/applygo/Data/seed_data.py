@@ -95,8 +95,11 @@ def seed_large():
             company = Company(
                 user_id=user.id,
                 name=f"Company {i}",
-                address=f"{i * 10} Nguyen Trai, Hanoi",
-                website=f"www.company{i}.com"
+                status=CompanyStatus.APPROVED.value,
+                mst=''.join(random.choices(string.digits, k=10)),
+                address=f"{i*10} Nguyen Trai, Hanoi",
+                website=f"www.company{i}.com",
+
             )
             db.session.add(company)
             db.session.commit()

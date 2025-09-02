@@ -135,6 +135,31 @@ def get_applications_by_company(company_id: int):
 # ------------------------
 # ADMIN / REPORT
 # ------------------------
+def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_incr=False, status=None):
+
+    query: Query = Job.query.filter(Job.company_id == company_id)
+
+    # filter theo status
+    if status is not None:
+        query = query.filter(Job.status == status)
+
+    # filter theo từ khóa
+    if kw:
+        query = query.filter(Job.title.ilike(f"%{kw}%"))
+
+    # sort
+    if sort_by_date_incr:
+        query = query.order_by(Job.created_at.asc())
+    else:
+        query = query.order_by(Job.created_at.desc())
+
+    # tổng số record
+    total = query.count()
+
+    # phân trang
+    jobs = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    return jobs, total
 
 def get_job_statistics():
     """Thống kê số lượng ứng tuyển theo công việc"""

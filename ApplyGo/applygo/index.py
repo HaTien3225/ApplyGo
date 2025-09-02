@@ -13,6 +13,10 @@ template_dir = os.path.join(base_dir, 'templates')
 # ------------------------
 # TRANG CHỦ
 # ------------------------
+@app.context_processor
+def inject_user_roles():
+    return dict(UserRole=UserRole)
+
 @app.route('/')
 def index():
     jobs = dao.get_all_jobs()[:10]  # 10 việc mới nhất
@@ -125,6 +129,38 @@ def jobs():
     companies = dao.get_companies()
     return render_template('jobs.html', jobs=jobs, companies=companies)
 
+@app.route('/recruitment-post-manager/')
+@role_required(UserRole.COMPANY)
+def recruitment_post_manager():
+    sort = request.args.get('sort')
+    kw = request.args.get('kw')
+    page = int(request.args.get('page', 1))
+    status = request.args.get('status')
+    page_size = 12
+    company = current_user.company
+    total_jobs = Job.query.filter(Job.company_id == company.id).count()
+    if page >= math.ceil(total_jobs / page_size):
+        page = 1
+     # 'asc' hoặc 'desc'
+    sort_by = False
+    if sort == 'desc':
+        sort_by = False
+    else:
+        sort_by = True
+    Jstatus = None
+    if status == "OPEN":
+        Jstatus = JobStatus.OPEN
+    if status == "CLOSED":
+        Jstatus = JobStatus.CLOSED
+    if status == "PAUSED":
+        Jstatus = JobStatus.PAUSED
+
+    jobs , total = get_jobs_by_company(company_id=company.id,sort_by_date_incr=sort_by,page_size=12,page=page,kw=kw,status=Jstatus)
+    print(total_jobs)
+    # print(jobs[0].title)
+    return render_template('company/recruitment_post_manager.html',company_jobs=jobs,page=page)
+
+
 
 @app.route('/jobs/<int:job_id>/')
 def job_detail(job_id):
@@ -166,6 +202,7 @@ def create_cv():
         flash("Chỉ ứng viên mới có thể tạo CV!", "danger")
         return redirect(url_for("index"))
 
+
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
 
     if request.method == "POST":
@@ -174,6 +211,7 @@ def create_cv():
         skills = request.form.get("skills")
         experience = request.form.get("experience")
         education = request.form.get("education")
+
 
         if profile:  # update nếu đã có CV
             profile.full_name = full_name
