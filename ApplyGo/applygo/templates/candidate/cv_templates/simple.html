@@ -1,0 +1,83 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}CV Đơn Giản của {{ profile.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 800px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+    <div class="d-flex justify-content-end mb-3">
+        <button id="editBtn" class="btn btn-primary me-2">Chỉnh Sửa</button>
+        <button id="saveBtn" class="btn btn-success" style="display: none;">Lưu</button>
+    </div>
+
+    <form id="cvForm" method="POST" action="{{ url_for('create_cv') }}">
+        <div class="cv-container">  <div class="header" style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2c3e50; margin: 0; font-size: 2.5em;">
+                    <span class="view-mode">{{ profile.full_name }}</span>
+                    <input type="text" name="full_name" class="form-control edit-mode" value="{{ profile.full_name }}" style="display: none;">
+                </h1>
+                <p style="color: #7f8c8d; margin: 5px 0 0;">
+                    <span class="view-mode">Email: {{ profile.user.email }}</span>
+                    <input type="email" name="email" class="form-control edit-mode" value="{{ profile.user.email }}" style="display: none;">
+                </p>
+                <p style="color: #7f8c8d; margin: 5px 0 0;">
+                    <span class="view-mode">Điện thoại: {{ profile.phone }}</span>
+                    <input type="text" name="phone" class="form-control edit-mode" value="{{ profile.phone }}" style="display: none;">
+                </p>
+            </div>
+
+            {% if profile.summary %}
+            <div class="section" style="margin-bottom: 25px;">
+                <h2 style="font-size: 1.5em; color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">Tóm tắt</h2>
+                <p style="margin: 0;">
+                    <span class="view-mode">{{ profile.summary }}</span>
+                    <textarea name="summary" class="form-control edit-mode" rows="3" style="display: none;">{{ profile.summary }}</textarea>
+                </p>
+            </div>
+            {% endif %}
+
+            {% if profile.skills %}
+            <div class="section" style="margin-bottom: 25px;">
+                <h2 style="font-size: 1.5em; color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">Kỹ năng</h2>
+                <p style="margin: 0;">
+                    <span class="view-mode">{{ profile.skills }}</span>
+                    <textarea name="skills" class="form-control edit-mode" rows="3" style="display: none;">{{ profile.skills }}</textarea>
+                </p>
+            </div>
+            {% endif %}
+
+            {% if profile.experience %}
+            <div class="section" style="margin-bottom: 25px;">
+                <h2 style="font-size: 1.5em; color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">Kinh nghiệm</h2>
+                <p style="margin: 0 0 10px; font-weight: bold;">
+                    <span class="view-mode">{{ profile.experience }}</span>
+                    <textarea name="experience" class="form-control edit-mode" rows="5" style="display: none;">{{ profile.experience }}</textarea>
+                </p>
+            </div>
+            {% endif %}
+
+            {% if profile.education %}
+            <div class="section" style="margin-bottom: 25px;">
+                <h2 style="font-size: 1.5em; color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">Học vấn</h2>
+                <p style="margin: 0 0 10px; font-weight: bold;">
+                    <span class="view-mode">{{ profile.education }}</span>
+                    <textarea name="education" class="form-control edit-mode" rows="4" style="display: none;">{{ profile.education }}</textarea>
+                </p>
+            </div>
+            {% endif %}
+        </div> </form>
+</div>
+
+<script>
+    document.getElementById('editBtn').addEventListener('click', function() {
+        document.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'block');
+        this.style.display = 'none';
+        document.getElementById('saveBtn').style.display = 'block';
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        document.getElementById('cvForm').submit();
+    });
+</script>
+{% endblock %}

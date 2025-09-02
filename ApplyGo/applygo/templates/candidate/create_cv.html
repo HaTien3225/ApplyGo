@@ -1,0 +1,67 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Tạo CV - ApplyGO{% endblock %}
+
+{% block custom_head %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-gradient-primary text-white text-center py-4 rounded-top-4">
+            <h2 class="mb-0 fw-bold"><i class="bi bi-file-earmark-person-fill me-2"></i> Tạo / Cập nhật CV</h2>
+        </div>
+        <div class="card-body p-5">
+            <form method="POST">
+                <div class="mb-4">
+                    <label for="full_name" class="form-label"><i class="bi bi-person me-2"></i> Họ và tên</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name"
+                           placeholder="Ví dụ: Nguyễn Văn A"
+                           value="{{ profile.full_name if profile else '' }}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="phone" class="form-label"><i class="bi bi-telephone me-2"></i> Số điện thoại</label>
+                    <input type="tel" class="form-control" id="phone" name="phone"
+                           placeholder="Ví dụ: 0987-654-321"
+                           value="{{ profile.phone if profile else '' }}">
+                </div>
+
+                <div class="mb-4">
+                    <label for="skills" class="form-label"><i class="bi bi-lightbulb me-2"></i> Kỹ năng</label>
+                    <textarea class="form-control" id="skills" name="skills" rows="4" placeholder="Ví dụ: Python, JavaScript, CSS, SQL, Docker, AWS">{{ profile.skills if profile else '' }}</textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label for="experience" class="form-label"><i class="bi bi-briefcase me-2"></i> Kinh nghiệm</label>
+                    <textarea class="form-control" id="experience" name="experience" rows="6" placeholder="Mô tả chi tiết kinh nghiệm làm việc của bạn (chức vụ, công ty, thời gian, mô tả công việc, thành tựu...)">{{ profile.experience if profile else '' }}</textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label for="education" class="form-label"><i class="bi bi-mortarboard me-2"></i> Học vấn</label>
+                    <textarea class="form-control" id="education" name="education" rows="4" placeholder="Thông tin về học vấn (tên trường, chuyên ngành, thời gian học, bằng cấp, điểm số...)">{{ profile.education if profile else '' }}</textarea>
+                </div>
+
+                <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                        <i class="bi bi-save me-2"></i> Lưu CV
+                    </button>
+                </div>
+            </form>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="mt-4">
+                  {% for category, msg in messages %}
+                    <div class="alert alert-{{ category }} d-flex align-items-center rounded-3">
+                        <i class="bi bi-info-circle-fill me-2"></i> <div>{{ msg }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endblock %}

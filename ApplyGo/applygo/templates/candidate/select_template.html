@@ -1,0 +1,108 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Chọn mẫu CV{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Chọn mẫu CV bạn muốn sử dụng</h2>
+    <form method="POST">
+        <div class="row">
+            {% for template in templates %}
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm template-card {% if profile and profile.cv_template == template.html_file %}selected-card{% endif %}">
+                    <div class="card-body p-2">
+                        <h5 class="card-title text-center mb-2">{{ template.name }}</h5>
+                        <div class="cv-render-container mb-3" onclick="selectCard(this)">
+                            <img src="{{ url_for('static', filename=template.preview_image) }}"
+                                 class="img-fluid" alt="Preview {{ template.name }}">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="#" class="btn btn-secondary btn-sm preview-link" data-url="{{ url_for('preview_cv', template_name=template.html_file) }}">
+                                <i class="bi bi-eye-fill me-1"></i> Xem trước
+                            </a>
+                            <div class="form-check text-center">
+                                <input class="form-check-input" type="radio" name="template_id" value="{{ template.id }}"
+                                       required
+                                       {% if profile and profile.cv_template== template.html_file %}checked{% endif %}>
+                                <label class="form-check-label">Chọn mẫu này</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <button class="btn btn-primary btn-lg" type="submit">Sử dụng mẫu</button>
+        </div>
+    </form>
+
+    <div id="preview-area" class="mt-5" style="display:none;">
+        <h3 class="text-center">Xem trước CV</h3>
+        <div id="preview-content" class="border p-4 rounded shadow">
+            </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hàm để chọn thẻ mẫu
+        function selectCard(element) {
+            const card = element.closest(".template-card");
+            const radioButton = card.querySelector("input[type=radio]");
+
+            document.querySelectorAll("input[type=radio]").forEach(radio => radio.checked = false);
+            document.querySelectorAll(".template-card").forEach(c => c.classList.remove("selected-card"));
+
+            radioButton.checked = true;
+            card.classList.add("selected-card");
+        }
+
+        // Tự động highlight card khi trang được load
+        const checkedInput = document.querySelector("input[type=radio]:checked");
+        if (checkedInput) {
+            const card = checkedInput.closest(".template-card");
+            if (card) {
+                card.classList.add("selected-card");
+            }
+        }
+
+        // Xử lý sự kiện xem trước
+        document.querySelectorAll('.preview-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const url = this.getAttribute('data-url');
+                const previewArea = document.getElementById('preview-area');
+                const previewContent = document.getElementById('preview-content');
+
+                // Hiển thị vùng xem trước
+                previewArea.style.display = 'block';
+                previewContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                // Tải nội dung từ URL xem trước
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Tách nội dung chính từ HTML đầy đủ
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const cvContent = doc.querySelector('.cv-container');
+
+                        if (cvContent) {
+                            previewContent.innerHTML = cvContent.outerHTML;
+                        } else {
+                            previewContent.innerHTML = '<p class="text-center text-danger">Không thể tải nội dung xem trước.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching preview:', error);
+                        previewContent.innerHTML = '<p class="text-center text-danger">Có lỗi xảy ra khi tải xem trước.</p>';
+                    });
+            });
+        });
+    });
+
+</script>
+{% endblock %}
