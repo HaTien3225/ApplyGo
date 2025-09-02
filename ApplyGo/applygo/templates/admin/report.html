@@ -1,0 +1,142 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+
+<div class="container-fluid mt-4">
+
+  <h3>Báo cáo thống kê</h3>
+
+  <!-- Filter -->
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label>Số tháng gần đây:</label>
+      <select name="months" class="form-select">
+        <option value="0" {% if months == 0 %}selected{% endif %}>Tất cả</option>
+        <option value="1" {% if months == 1 %}selected{% endif %}>1 tháng</option>
+        <option value="3" {% if months == 3 %}selected{% endif %}>3 tháng</option>
+        <option value="6" {% if months == 6 %}selected{% endif %}>6 tháng</option>
+        <option value="12" {% if months == 12 %}selected{% endif %}>12 tháng</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label>Địa điểm:</label>
+      <select name="location" class="form-select">
+        <option value="all" {% if location_filter == 'all' %}selected{% endif %}>Tất cả</option>
+        {% for loc in all_locations %}
+        <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 align-self-end">
+      <button class="btn btn-primary">Áp dụng</button>
+    </div>
+  </form>
+
+  <!-- Tổng quan -->
+  <div class="row mb-4">
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Tổng Users: <strong>{{ total_users }}</strong></div></div>
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Ứng viên: <strong>{{ total_candidates }}</strong></div></div>
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Công ty: <strong>{{ total_companies }}</strong></div></div>
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Tin tuyển dụng: <strong>{{ total_jobs }}</strong></div></div>
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Hồ sơ ứng tuyển: <strong>{{ total_applications }}</strong></div></div>
+    <div class="col-md-2"><div class="card p-2 text-center bg-light">Công ty duyệt: <strong>{{ total_approved_companies }}</strong></div></div>
+  </div>
+
+  <!-- Biểu đồ ứng tuyển theo trạng thái -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>Ứng tuyển theo trạng thái (Stacked Bar)</strong></div>
+    <div class="card-body">
+      <canvas id="statusChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Biểu đồ ứng tuyển theo công ty -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>Ứng tuyển theo công ty (Stacked Bar)</strong></div>
+    <div class="card-body">
+      <canvas id="companyChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Biểu đồ tuyển dụng theo địa điểm -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>Số tin tuyển dụng theo địa điểm</strong></div>
+    <div class="card-body">
+      <canvas id="locationChart" height="100"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // --- Ứng tuyển theo trạng thái ---
+  const statusLabels = {{ labels|tojson }};
+  const statusData = {
+    Pending: {{ status_data['Pending']|tojson }},
+    Accepted: {{ status_data['Accepted']|tojson }},
+    Rejected: {{ status_data['Rejected']|tojson }}
+  };
+
+  const ctxStatus = document.getElementById('statusChart').getContext('2d');
+  new Chart(ctxStatus, {
+    type: 'bar',
+    data: {
+      labels: statusLabels,
+      datasets: [
+        { label: 'Pending', data: statusData.Pending, backgroundColor: 'rgba(255, 205, 86, 0.7)' },
+        { label: 'Accepted', data: statusData.Accepted, backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+        { label: 'Rejected', data: statusData.Rejected, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { tooltip: { mode: 'index', intersect: false } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero:true } }
+    }
+  });
+
+  // --- Ứng tuyển theo công ty ---
+  const companyLabels = {{ company_status_data.keys()|list|tojson }};
+  const companyPending = {{ company_status_data.values()|map(attribute='Pending')|list|tojson }};
+  const companyAccepted = {{ company_status_data.values()|map(attribute='Accepted')|list|tojson }};
+  const companyRejected = {{ company_status_data.values()|map(attribute='Rejected')|list|tojson }};
+
+  const ctxCompany = document.getElementById('companyChart').getContext('2d');
+  new Chart(ctxCompany, {
+    type: 'bar',
+    data: {
+      labels: companyLabels,
+      datasets: [
+        { label: 'Pending', data: companyPending, backgroundColor: 'rgba(255, 205, 86, 0.7)' },
+        { label: 'Accepted', data: companyAccepted, backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+        { label: 'Rejected', data: companyRejected, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { tooltip: { mode: 'index', intersect: false } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero:true } }
+    }
+  });
+
+  // --- Tin tuyển dụng theo địa điểm ---
+  const locationLabels = {{ location_labels|tojson }};
+  const locationValues = {{ location_values|tojson }};
+
+  const ctxLocation = document.getElementById('locationChart').getContext('2d');
+  new Chart(ctxLocation, {
+    type: 'bar',
+    data: {
+      labels: locationLabels,
+      datasets: [{
+        label: 'Số tin tuyển dụng',
+        data: locationValues,
+        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+      }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero:true } } }
+  });
+</script>
+
+{% endblock %}
