@@ -91,7 +91,7 @@ class Company(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     logo_url = db.Column(db.String(500), nullable=True)
     mst = db.Column(db.String(10), nullable=False)
-    status = db.Column(db.Enum(CompanyStatus), default=CompanyStatus.PENDING)
+    status = db.Column(db.String(20), nullable=False, default=CompanyStatus.PENDING.value)
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
 
@@ -107,7 +107,7 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     salary = db.Column(db.String(50), nullable=True)
-    status = db.Column(db.String(20), default=JobStatus.OPEN.value)
+    status = db.Column(db.String(20), nullable=False, default=JobStatus.OPEN.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -123,7 +123,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
-    status = db.Column(db.String(20), default=ApplicationStatus.PENDING.value)
+    status = db.Column(db.String(20),nullable=False, default=ApplicationStatus.PENDING.value)
     applied_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
