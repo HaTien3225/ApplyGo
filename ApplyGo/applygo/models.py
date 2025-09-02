@@ -26,6 +26,13 @@ class JobStatus(Enum):
     PAUSED = "Paused"
 
 
+class CompanyStatus(Enum):
+    __table_args__ = {'extend_existing': True}
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    DECLINED = "Declined"
+
+
 class User(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -84,7 +91,8 @@ class Company(db.Model):
     logo_url = db.Column(db.String(500), nullable=True)
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
-
+    mst = db.Column(db.String(10),nullable=False)
+    status = db.Column(db.Enum(CompanyStatus), default=CompanyStatus.PENDING)
     def __str__(self):
         return self.name
 
@@ -141,3 +149,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         print("Database created successfully!")
+
+

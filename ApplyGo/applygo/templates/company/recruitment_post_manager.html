@@ -1,0 +1,96 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ - ApplyGO{% endblock %}
+
+{% block content %}
+<body style="padding: 100px">
+<div class="container-fluid d-flex">
+    <p class="h2" style="color:#0dcaf0">Các đơn ứng tuyển đã đăng</p>
+</div>
+
+<div class="container-fluid d-flex flex-row" style="height: 100vh;">
+
+    <!-- Sidebar -->
+    <form class="room shadow d-flex flex-column p-3"
+          style="flex: 0 0 15%; background-color: #f8f9fa; height: 100%;"
+          method="get">
+
+        <!-- Trang -->
+        <p class="h5 text-info mb-3 text-center">Trang : {{page}}</p>
+
+        <!-- Search + Button -->
+        <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="kw" value="{{ kw or '' }}" placeholder="Tìm kiếm...">
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+        </div>
+
+        <!-- Sort radio -->
+        <div class="btn-group btn-group-sm mb-3" role="group" aria-label="Sort">
+            <input type="radio" class="btn-check" name="sort" id="sortAsc" value="asc"
+                   {% if sort== 'asc' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="sortAsc">Ngày ↑</label>
+
+            <input type="radio" class="btn-check" name="sort" id="sortDesc" value="desc"
+                   {% if sort== 'desc' or not sort %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="sortDesc">Ngày ↓</label>
+        </div>
+
+
+        <!-- Status dropdown -->
+        <div class="mb-3">
+            <select class="form-select form-select-sm" name="status">
+                <option value="" {% if not status %}selected{% endif %}>Tất cả</option>
+                <option value="OPEN" {% if status==
+                'OPEN' %}selected{% endif %}>OPEN</option>
+                <option value="CLOSED" {% if status==
+                'CLOSED' %}selected{% endif %}>CLOSED</option>
+                <option value="PAUSED" {% if status==
+                'PAUSED' %}selected{% endif %}>PAUSED</option>
+            </select>
+        </div>
+
+        <!-- Pagination -->
+        <ul class="pagination pagination-sm mb-3 justify-content-center">
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <button class="page-link" type="submit" name="page" value="{{ page-1 if page > 1 else 1 }}">‹</button>
+            </li>
+            <li class="page-item">
+                <button class="page-link" type="submit" name="page" value="{{ page+1 }}">›</button>
+            </li>
+        </ul>
+
+        <!-- Nút Tạo mới -->
+        <a href="/tao-moi" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
+    </form>
+
+    <!-- Content -->
+    <div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+        <!-- Scrollable job list -->
+        <div class="flex-grow-1 overflow-auto p-4">
+            <div class="row g-4">
+                {% for company_job in company_jobs %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100 hover-card border-0">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ company_job.title }}</h5>
+                            <p class="small text-secondary">
+                                <i class="bi bi-geo-alt"></i> {{ company_job.location or "Toàn quốc" }}
+                            </p>
+                            <p class="small text-secondary">
+                                <i class="bi bi-clock"></i> Đăng vào : {{ company_job.created_at }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <a href="" class="btn btn-outline-success btn-sm">Quản lý</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+
+{% endblock %}

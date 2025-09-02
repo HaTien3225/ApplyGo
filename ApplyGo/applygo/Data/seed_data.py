@@ -1,9 +1,9 @@
 from applygo import db, app
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole, CompanyStatus
 import hashlib
 from datetime import datetime, timedelta
 import random
-
+import string
 def seed_large():
     try:
         # Xóa dữ liệu cũ
@@ -75,7 +75,9 @@ def seed_large():
                 user_id=user.id,
                 name=f"Company {i}",
                 address=f"{i*10} Nguyen Trai, Hanoi",
-                website=f"www.company{i}.com"
+                website=f"www.company{i}.com",
+                status=CompanyStatus.APPROVED.value,
+                mst=''.join(random.choices(string.digits, k=10))
             )
             db.session.add(company)
             db.session.commit()

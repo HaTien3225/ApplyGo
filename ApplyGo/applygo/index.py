@@ -1,9 +1,12 @@
 from datetime import datetime
+
+import math
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from applygo import app, db, dao, login
-from applygo.decorators import loggedin
-from applygo.models import User, Job, Company, Application
+from applygo.dao import get_jobs_by_company
+from applygo.decorators import loggedin, role_required
+from applygo.models import User, Job, Company, Application, UserRole, JobStatus
 
 
 # ------------------------
@@ -15,7 +18,9 @@ def index():
     companies = dao.get_companies()
     return render_template('page/index.html', jobs=jobs, companies=companies)
 
-
+@app.context_processor
+def inject_user_roles():
+    return dict(UserRole=UserRole)
 # ------------------------
 # AUTH
 # ------------------------
@@ -153,6 +158,38 @@ def apply_job(job_id):
 def applications():
     apps = dao.get_applications_by_user(current_user.id)
     return render_template('applications.html', applications=apps)
+
+
+@app.route('/recruitment-post-manager/')
+@role_required(UserRole.COMPANY)
+def recruitment_post_manager():
+    sort = request.args.get('sort')
+    kw = request.args.get('kw')
+    page = int(request.args.get('page', 1))
+    status = request.args.get('status')
+    page_size = 12
+    company = current_user.company
+    total_jobs = Job.query.filter(Job.company_id == company.id).count()
+    if page >= math.ceil(total_jobs / page_size):
+        page = 1
+     # 'asc' hoặc 'desc'
+    sort_by = False
+    if sort == 'desc':
+        sort_by = False
+    else:
+        sort_by = True
+    Jstatus = None
+    if status == "OPEN":
+        Jstatus = JobStatus.OPEN
+    if status == "CLOSED":
+        Jstatus = JobStatus.CLOSED
+    if status == "PAUSED":
+        Jstatus = JobStatus.PAUSED
+
+    jobs , total = get_jobs_by_company(company_id=company.id,sort_by_date_incr=sort_by,page_size=12,page=page,kw=kw,status=Jstatus)
+    print(total_jobs)
+    # print(jobs[0].title)
+    return render_template('company/recruitment_post_manager.html',company_jobs=jobs,page=page)
 
 
 if __name__ == "__main__":

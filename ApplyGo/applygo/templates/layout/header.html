@@ -18,13 +18,13 @@
                     <a class="nav-link" href="/companies">Công ty</a>
                 </li>
 
-                {% if current_user.is_authenticated and current_user.role == "candidate" %}
+                {% if current_user.is_authenticated and current_user.role == UserRole.CANDIDATE %}
                 <li class="nav-item">
                     <a class="nav-link" href="/applications">Hồ sơ ứng tuyển</a>
                 </li>
-                {% elif current_user.is_authenticated and current_user.role == "company" %}
+                {% elif current_user.is_authenticated and current_user.role == UserRole.COMPANY %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/my-jobs">Tin tuyển dụng của tôi</a>
+                    <a class="nav-link" href="/recruitment-post-manager">Tin tuyển dụng của tôi</a>
                 </li>
                 {% endif %}
             </ul>

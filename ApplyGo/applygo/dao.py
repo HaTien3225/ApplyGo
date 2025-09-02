@@ -1,7 +1,10 @@
 import hashlib
 from datetime import datetime
+
+from sqlalchemy.orm import Query
+
 from applygo import app, db
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, JobStatus
 
 
 # ------------------------
@@ -150,5 +153,35 @@ def get_job_statistics():
 # ------------------------
 if __name__ == "__main__":
     with app.app_context():
-        print("Jobs:", get_all_jobs())
-        print("Companies:", get_companies())
+        # print("Jobs:", get_all_jobs())
+        # print("Companies:", get_companies())
+        admin_user = User(username='admin', password=hash_password('admin123'),email='admin@gmail.com', is_admin=True)
+        db.session.add(admin_user)
+        db.session.commit()
+
+
+def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_incr=False, status=None):
+
+    query: Query = Job.query.filter(Job.company_id == company_id)
+
+    # filter theo status
+    if status is not None:
+        query = query.filter(Job.status == status)
+
+    # filter theo từ khóa
+    if kw:
+        query = query.filter(Job.title.ilike(f"%{kw}%"))
+
+    # sort
+    if sort_by_date_incr:
+        query = query.order_by(Job.created_at.asc())
+    else:
+        query = query.order_by(Job.created_at.desc())
+
+    # tổng số record
+    total = query.count()
+
+    # phân trang
+    jobs = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    return jobs, total
