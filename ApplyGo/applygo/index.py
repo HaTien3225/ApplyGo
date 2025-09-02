@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from bs4 import BeautifulSoup
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from applygo import app, db, dao, login
@@ -131,8 +133,94 @@ def jobs():
     companies = dao.get_companies()
     return render_template('jobs.html', jobs=jobs, companies=companies)
 
+@app.route('/edit-recruitment-post/<int:id>', methods=['POST'])
+@login_required
+@role_required(UserRole.COMPANY.value)
+def edit_recruitment_post(id):
+    job = Job.query.get_or_404(id)
+    # Chỉ cho phép công ty chủ quản sửa job của mình
+    if job.company_id != current_user.company.id:
+        flash("Bạn không có quyền chỉnh sửa tin tuyển dụng này", "danger")
+        return redirect(url_for('recruitment_post_manager'))
+
+    title = request.form.get('title', '').strip()
+    salary = request.form.get('salary', '').strip()
+    description = request.form.get('description', '').strip()
+    location = request.form.get('location', '').strip()
+
+    # Dùng BeautifulSoup lọc HTML
+    def clean_html(text):
+        return BeautifulSoup(text, "html.parser").get_text()
+
+    title = clean_html(title)
+    description = clean_html(description)
+    location = clean_html(location)
+
+    # Validate
+    if not title:
+        flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+    elif len(title) > 200:
+        flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+
+    if not salary:
+        flash("Chưa nhập mức lương", "danger")
+        return redirect(url_for('create_recruitment_post'))
+    elif len(salary) > 20:
+        flash("Mức lương quá dài", "danger")
+        return redirect(url_for('create_recruitment_post'))
+
+    if not description:
+        flash("Chưa nhập mô tả công việc", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+    elif len(description) > 5000:
+        flash("Mô tả công việc không được vượt quá 5000 ký tự", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+
+    if not location:
+        flash("Chưa nhập nơi làm việc", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+    elif len(location) > 100:
+        flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+
+    # Update job
+    job.title = title
+    job.salary = salary
+    job.description = description
+    job.location = location
+    db.session.commit()
+
+    flash("Cập nhật tin tuyển dụng thành công!", "success")
+    return redirect(url_for('recruitment_post_detail',id=id))
+
+@app.route('/recruitment-post-detail/<int:id>', methods=['GET'])
+@login_required
+@role_required(UserRole.COMPANY.value)
+def recruitment_post_detail(id):
+    job = Job.query.get_or_404(id)
+
+    # GET request → render form với dữ liệu job
+    return render_template('company/edit_recruitment_post.html', job=job)
+
+@app.route('/recruitment-post-manager/<int:id>/delete', methods=['POST'])
+@login_required
+@role_required(UserRole.COMPANY.value)
+def delete_recruitment_post(id):
+    job = Job.query.get_or_404(id)
+
+    if job.company_id != current_user.company.id:
+        flash("Bạn không có quyền xóa tin tuyển dụng này", "danger")
+        return redirect(url_for('recruitment_post_manager'))
+
+    db.session.delete(job)
+    db.session.commit()
+    flash("Xóa tin tuyển dụng thành công!", "success")
+    return redirect(url_for('recruitment_post_manager'))
+
 @app.route('/recruitment-post-manager/')
-@role_required(UserRole.COMPANY)
+@role_required(UserRole.COMPANY.value)
 def recruitment_post_manager():
     sort = request.args.get('sort')
     kw = request.args.get('kw')
@@ -162,7 +250,66 @@ def recruitment_post_manager():
     # print(jobs[0].title)
     return render_template('company/recruitment_post_manager.html',company_jobs=jobs,page=page)
 
+@app.route('/recruitment-post/create', methods=['POST','GET'])
+@role_required(UserRole.COMPANY.value)
+def create_recruitment_post():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        salary = request.form.get('salary', '').strip()
+        description = request.form.get('description', '').strip()
+        location = request.form.get('location', '').strip()
 
+        # Dùng BeautifulSoup để loại bỏ HTML tags
+        def clean_html(text):
+            soup = BeautifulSoup(text, "html.parser")
+            return soup.get_text()
+
+        title = clean_html(title)
+        description = clean_html(description)
+        location = clean_html(location)
+
+        # Validate
+        if not title:
+            flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        elif len(title) > 200:
+            flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
+            return redirect(url_for('create_recruitment_post'))
+
+        if not salary :
+            flash("Chưa nhập mức lương", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        elif len(salary) > 20:
+            flash("Mức lương quá dài", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        if not description:
+            flash("Chưa nhập mô tả công việc", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        elif len(description) > 5000:
+            flash("Mô tả công việc không được vượt quá 5000 ký tự", "danger")
+            return redirect(url_for('create_recruitment_post'))
+
+        if not location:
+            flash("Chưa nhập nơi làm việc", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        elif len(location) > 100:
+            flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
+            return redirect(url_for('create_recruitment_post'))
+
+        # Nếu hợp lệ thì lưu Job mới
+        job = Job(
+            company_id=current_user.company.id,
+            title=title,
+            salary=salary,
+            description=description,
+            location=location
+        )
+        db.session.add(job)
+        db.session.commit()
+
+        flash("Tạo tin tuyển dụng thành công!", "success")
+        return redirect(url_for('recruitment_post_manager'))
+    return render_template('company/create_recruitment_post.html')
 
 @app.route('/jobs/<int:job_id>/')
 def job_detail(job_id):

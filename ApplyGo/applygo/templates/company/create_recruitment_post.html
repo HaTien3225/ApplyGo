@@ -1,0 +1,50 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ - ApplyGO{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class=" shadow-sm" style="background: white; border-radius: 20px; padding:20px">
+                <div class="card-header  text-white" style="background-color: #0dcaf0">
+                    <h5 class="mb-0">Tạo tin tuyển dụng</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_recruitment_post') }}">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Tiêu đề</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả công việc</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Địa điểm</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+
+                        <!-- Salary -->
+                        <div class="mb-3">
+                            <label for="salary" class="form-label">Mức lương </label>
+                            <input type="text" class="form-control" id="salary" name="salary" required>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('recruitment_post_manager') }}" class="btn btn-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-primary">Tạo mới</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
