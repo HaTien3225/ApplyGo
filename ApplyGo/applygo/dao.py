@@ -1,5 +1,8 @@
 import hashlib
 from datetime import datetime
+
+from flask_sqlalchemy.query import Query
+
 from applygo import app, db
 from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus
 
@@ -33,7 +36,7 @@ def get_user_role(user: User):
     return user.role.lower()
 
 
-def create_user(name, username, password, email, phone, role="candidate"):
+def create_user(name, username, password, email, role="candidate"):
     """Đăng ký user mới (ứng viên mặc định)"""
     hashed_password = hash_password(password)
 
@@ -41,7 +44,6 @@ def create_user(name, username, password, email, phone, role="candidate"):
         username=username.strip(),
         password=hashed_password,
         email=email.strip(),
-        phone=phone.strip(),
         role=role.lower()
     )
     db.session.add(user)

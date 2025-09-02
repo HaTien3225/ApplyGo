@@ -1,27 +1,28 @@
-# admin_setup_popup.py
 import cloudinary
 import cloudinary.uploader
-
-from flask import redirect, url_for, flash
+from datetime import datetime, timedelta
+from flask import redirect, url_for, flash, request
 from flask_admin import Admin, AdminIndexView, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
 from markupsafe import Markup
 from wtforms import FileField, SelectField
 from wtforms.validators import DataRequired
+from sqlalchemy import extract, func
 from applygo import app, db
 from applygo.models import (
     User, Company, Job, Application, CandidateProfile,
     UserRole, ApplicationStatus, JobStatus
 )
 
+# --- Cloudinary config ---
 cloudinary.config(
     cloud_name=app.config.get("CLOUDINARY_CLOUD_NAME"),
     api_key=app.config.get("CLOUDINARY_API_KEY"),
     api_secret=app.config.get("CLOUDINARY_API_SECRET")
 )
 
-
+# --- Custom Admin Index ---
 class MyAdminIndexView(AdminIndexView):
     @expose('/')
     def index(self):
@@ -29,7 +30,7 @@ class MyAdminIndexView(AdminIndexView):
             return redirect(url_for("login_admin"))
         return super().index()
 
-
+# --- Logout ---
 class LogoutView(BaseView):
     @expose('/')
     def index(self):
@@ -39,7 +40,7 @@ class LogoutView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin()
 
-
+# --- Authenticated ModelView with Cloudinary support ---
 class AuthenticatedView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.is_admin()
@@ -55,7 +56,6 @@ class AuthenticatedView(ModelView):
             if hasattr(form, "image") and form.image.data:
                 upload_result = cloudinary.uploader.upload(form.image.data)
                 model.image_url = upload_result["secure_url"]
-
             if hasattr(form, "logo") and form.logo.data:
                 upload_result = cloudinary.uploader.upload(form.logo.data)
                 model.logo_url = upload_result["secure_url"]
@@ -71,11 +71,9 @@ class AuthenticatedView(ModelView):
     def update_model(self, form, model):
         try:
             form.populate_obj(model)
-
             if hasattr(form, "image") and form.image.data:
                 upload_result = cloudinary.uploader.upload(form.image.data)
                 model.image_url = upload_result["secure_url"]
-
             if hasattr(form, "logo") and form.logo.data:
                 upload_result = cloudinary.uploader.upload(form.logo.data)
                 model.logo_url = upload_result["secure_url"]
@@ -99,7 +97,7 @@ class AuthenticatedView(ModelView):
             flash(f"Lỗi khi xóa {self.model.__name__}: {e}", "error")
             return False
 
-
+# --- Formatter ảnh popup ---
 def popup_image_formatter(view, context, model, name):
     url = getattr(model, name, None)
     if not url:
@@ -118,7 +116,7 @@ def popup_image_formatter(view, context, model, name):
     </div>
     """)
 
-
+# --- Admin views ---
 class UserView(AuthenticatedView):
     column_list = ["id", "username", "email", "role", "company.name",
                    "candidate_profile.full_name", "image_url"]
@@ -133,7 +131,6 @@ class UserView(AuthenticatedView):
         "image_url": "Ảnh đại diện"
     }
     column_formatters = {"image_url": popup_image_formatter}
-
     form_extra_fields = {"image": FileField("Ảnh đại diện")}
     form_overrides = {"role": SelectField}
     form_args = {
@@ -142,7 +139,6 @@ class UserView(AuthenticatedView):
             "validators": [DataRequired()]
         }
     }
-
 
 class ApplicationView(AuthenticatedView):
     column_list = ["id", "candidate_profile.full_name", "job.title", "status", "applied_at"]
@@ -161,7 +157,6 @@ class ApplicationView(AuthenticatedView):
             "validators": [DataRequired()]
         }
     }
-
 
 class JobView(AuthenticatedView):
     column_list = ["id", "title", "company.name", "location", "salary", "status", "created_at"]
@@ -183,7 +178,6 @@ class JobView(AuthenticatedView):
         }
     }
 
-
 class CompanyView(AuthenticatedView):
     column_list = ["id", "name", "address", "user.username", "logo_url"]
     column_searchable_list = ["name", "address"]
@@ -195,7 +189,6 @@ class CompanyView(AuthenticatedView):
     }
     column_formatters = {"logo_url": popup_image_formatter}
     form_extra_fields = {"logo": FileField("Logo công ty")}
-
 
 class CandidateProfileView(AuthenticatedView):
     column_list = ["id", "full_name", "user.username", "phone", "skills", "experience", "education"]
@@ -209,7 +202,101 @@ class CandidateProfileView(AuthenticatedView):
         "education": "Học vấn"
     }
 
+# --- ReportView nâng cao ---
+class ReportView(BaseView):
+    @expose('/')
+    def index(self):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            return redirect(url_for("login_admin"))
 
+        # --- Lọc khoảng thời gian ---
+        months = int(request.args.get('months', 6))
+        now = datetime.utcnow()
+        start_date = datetime.min if months == 0 else now - timedelta(days=30*months)
+
+        # --- Lọc địa điểm ---
+        location_filter = request.args.get('location', 'all')
+        all_locations = [loc[0] for loc in Job.query.with_entities(Job.location).distinct()]
+
+        # --- Thống kê tổng quan ---
+        total_users = User.query.count()
+        total_candidates = User.query.filter_by(role="candidate").count()
+        total_companies = User.query.filter_by(role="company").count()
+        total_jobs = Job.query.count()
+        total_applications = Application.query.count()
+        total_approved_companies = Company.query.filter_by(status="Approved").count()
+
+        # --- Thống kê ứng tuyển theo tháng ---
+        month_labels = db.session.query(
+            extract('year', Application.applied_at).label('year'),
+            extract('month', Application.applied_at).label('month')
+        ).filter(Application.applied_at >= start_date) \
+         .group_by('year', 'month') \
+         .order_by('year', 'month').all()
+
+        labels = [f"{int(y)}-{int(m):02d}" for y, m in month_labels]
+
+        statuses = ['Pending', 'Accepted', 'Rejected']
+        status_data = {status: [] for status in statuses}
+        for y, m in month_labels:
+            for status in statuses:
+                count = Application.query.filter(
+                    extract('year', Application.applied_at) == y,
+                    extract('month', Application.applied_at) == m,
+                    Application.status == status
+                ).count()
+                status_data[status].append(count)
+
+        # --- Ứng tuyển theo công ty ---
+        companies = Company.query.all()
+        company_status_data = {}
+        for company in companies:
+            company_status_data[company.name] = {status: [] for status in statuses}
+            for y, m in month_labels:
+                for status in statuses:
+                    count = db.session.query(Application).join(Job).filter(
+                        Job.company_id == company.id,
+                        extract('year', Application.applied_at) == y,
+                        extract('month', Application.applied_at) == m,
+                        Application.status == status
+                    ).count()
+                    company_status_data[company.name][status].append(count)
+
+        # --- Số tin tuyển dụng theo địa điểm ---
+        location_query = db.session.query(
+            Job.location,
+            func.count(Job.id)
+        ).group_by(Job.location)
+
+        if location_filter != 'all':
+            location_query = location_query.filter(Job.location == location_filter)
+
+        location_data = location_query.all()
+        location_labels = [loc for loc, count in location_data]
+        location_values = [count for loc, count in location_data]
+
+        return self.render(
+            'admin/report.html',
+            total_users=total_users,
+            total_candidates=total_candidates,
+            total_companies=total_companies,
+            total_jobs=total_jobs,
+            total_applications=total_applications,
+            total_approved_companies=total_approved_companies,
+            labels=labels,
+            status_data=status_data,
+            company_status_data=company_status_data,
+            months=months,
+            all_locations=all_locations,
+            location_filter=location_filter,
+            location_labels=location_labels,
+            location_values=location_values
+        )
+
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.is_admin()
+
+# --- Khởi tạo Admin ---
 admin = Admin(app, name="Quản lý ApplyGO", template_mode="bootstrap4",
               url="/admin", index_view=MyAdminIndexView())
 
@@ -218,4 +305,5 @@ admin.add_view(CompanyView(Company, db.session, name="Công ty"))
 admin.add_view(JobView(Job, db.session, name="Tin tuyển dụng"))
 admin.add_view(ApplicationView(Application, db.session, name="Ứng tuyển"))
 admin.add_view(CandidateProfileView(CandidateProfile, db.session, name="Hồ sơ ứng viên"))
+admin.add_view(ReportView(name="Báo cáo thống kê", endpoint="report"))
 admin.add_view(LogoutView(name="Đăng xuất", endpoint="logout"))

@@ -88,7 +88,6 @@ def register():
         name = request.form.get('name')
         username = request.form.get('username')
         email = request.form.get('email')
-        phone = request.form.get('phone')
         password = request.form.get('password')
         confirm = request.form.get('confirm')
 
@@ -101,7 +100,7 @@ def register():
             err_msg = "Email đã tồn tại!"
             return render_template('auth/register.html', err_msg=err_msg)
         try:
-            dao.create_user(name=name, username=username, password=password, email=email, phone=phone, role="candidate")
+            dao.create_user(name=name, username=username, password=password, email=email, role="candidate")
             return redirect('/login/')
         except Exception as ex:
             db.session.rollback()
