@@ -138,28 +138,6 @@ def get_applications_by_company(company_id: int):
 # ------------------------
 # ADMIN / REPORT
 # ------------------------
-
-def get_job_statistics():
-    """Thống kê số lượng ứng tuyển theo công việc"""
-    return db.session.query(
-        Job.title,
-        db.func.count(Application.id).label("applications")
-    ).join(Application, Application.job_id == Job.id, isouter=True)\
-     .group_by(Job.id).all()
-
-
-# ------------------------
-# TEST DAO
-# ------------------------
-if __name__ == "__main__":
-    with app.app_context():
-        # print("Jobs:", get_all_jobs())
-        # print("Companies:", get_companies())
-        admin_user = User(username='admin', password=hash_password('admin123'),email='admin@gmail.com', is_admin=True)
-        db.session.add(admin_user)
-        db.session.commit()
-
-
 def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_incr=False, status=None):
 
     query: Query = Job.query.filter(Job.company_id == company_id)
@@ -185,3 +163,25 @@ def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_
     jobs = query.offset((page - 1) * page_size).limit(page_size).all()
 
     return jobs, total
+
+def get_job_statistics():
+    """Thống kê số lượng ứng tuyển theo công việc"""
+    return db.session.query(
+        Job.title,
+        db.func.count(Application.id).label("applications")
+    ).join(Application, Application.job_id == Job.id, isouter=True)\
+     .group_by(Job.id).all()
+
+
+# ------------------------
+# TEST DAO
+# ------------------------
+if __name__ == "__main__":
+    with app.app_context():
+        # print("Jobs:", get_all_jobs())
+        # print("Companies:", get_companies())
+        admin_user = User(username='admin', password=hash_password('admin123'),email='admin@gmail.com', is_admin=True)
+        db.session.add(admin_user)
+        db.session.commit()
+
+

@@ -15,6 +15,19 @@ def loggedin(f):
 
     return decorated_function
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
