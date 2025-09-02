@@ -38,7 +38,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.Enum(UserRole), nullable=False, default=UserRole.CANDIDATE)
+    role = db.Column(db.String(20), nullable=False, default=UserRole.CANDIDATE.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     image_url = db.Column(db.String(500), nullable=True)
@@ -50,13 +50,13 @@ class User(db.Model, UserMixin):
         return self.username
 
     def is_admin(self):
-        return self.role == UserRole.ADMIN
+        return self.role == UserRole.ADMIN.value
 
     def is_candidate(self):
-        return self.role == UserRole.CANDIDATE
+        return self.role == UserRole.CANDIDATE.value
 
     def is_company(self):
-        return self.role == UserRole.COMPANY
+        return self.role == UserRole.COMPANY.value
 
 
 class CandidateProfile(db.Model):
@@ -107,7 +107,7 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     salary = db.Column(db.String(50), nullable=True)
-    status = db.Column(db.Enum(JobStatus), default=JobStatus.OPEN)
+    status = db.Column(db.String(20), default=JobStatus.OPEN.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -115,7 +115,7 @@ class Job(db.Model):
     applications = db.relationship("Application", back_populates="job", cascade="all, delete-orphan")
 
     def __str__(self):
-        return f"{self.title} ({self.status.value})"
+        return f"{self.title} ({self.status})"
 
 
 class Application(db.Model):
@@ -123,7 +123,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
-    status = db.Column(db.Enum(ApplicationStatus), default=ApplicationStatus.PENDING)
+    status = db.Column(db.String(20), default=ApplicationStatus.PENDING.value)
     applied_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 

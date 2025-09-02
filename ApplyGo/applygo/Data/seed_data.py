@@ -22,7 +22,7 @@ def seed_large():
             username="admin",
             email="admin@example.com",
             password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-            role=UserRole.ADMIN
+            role=UserRole.ADMIN.value
         )
         db.session.add(admin)
         db.session.commit()
@@ -63,7 +63,7 @@ def seed_large():
                 username=f"user{i}",
                 email=f"user{i}@example.com",
                 password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-                role=UserRole.CANDIDATE
+                role=UserRole.CANDIDATE.value
             )
             db.session.add(user)
             db.session.commit()
@@ -88,7 +88,7 @@ def seed_large():
                 username=f"company{i}",
                 email=f"company{i}@example.com",
                 password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-                role=UserRole.COMPANY
+                role=UserRole.COMPANY.value
             )
             db.session.add(user)
             db.session.commit()
@@ -130,7 +130,7 @@ def seed_large():
                 application = Application(
                     candidate_profile_id=candidate.id,
                     job_id=job.id,
-                    status=random.choice(list(ApplicationStatus)),
+                    status=random.choice([status.value for status in ApplicationStatus]),
                     applied_at=datetime.now() - timedelta(days=random.randint(0, 30))
                 )
                 db.session.add(application)
