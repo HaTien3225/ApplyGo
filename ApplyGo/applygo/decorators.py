@@ -1,6 +1,6 @@
 from functools import wraps
-from flask import request, redirect, url_for
-from flask_login import current_user
+from flask import request, redirect, url_for, abort
+from flask_login import current_user, login_required
 
 
 def loggedin(f):

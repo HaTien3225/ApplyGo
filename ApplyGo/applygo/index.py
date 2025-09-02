@@ -2,11 +2,13 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from applygo import app, db, dao, login
-from applygo.decorators import loggedin
-from applygo.models import User, Job, Company, Application, CandidateProfile, CvTemplate
+from applygo.dao import get_jobs_by_company
+from applygo.decorators import loggedin, role_required
+from applygo.models import User, Job, Company, Application, CandidateProfile, CvTemplate, UserRole, JobStatus
 # Cần thêm imports ở đầu file nếu chưa có
 from werkzeug.utils import secure_filename
 import os
+import math
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, 'templates')
 

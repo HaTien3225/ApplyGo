@@ -25,6 +25,12 @@ class JobStatus(Enum):
     CLOSED = "Closed"
     PAUSED = "Paused"
 
+class CompanyStatus(Enum):
+    __table_args__ = {'extend_existing': True}
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    DECLINED = "Declined"
+
 
 class User(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
@@ -151,5 +157,6 @@ class CvTemplate(db.Model):
 
 if __name__ == "__main__":
     with app.app_context():
+        db.drop_all()
         db.create_all()
         print("Database created successfully!")

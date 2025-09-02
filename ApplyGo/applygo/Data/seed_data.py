@@ -1,9 +1,10 @@
 from applygo import db, app
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole, CvTemplate
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole, CvTemplate, \
+    CompanyStatus
 import hashlib
 from datetime import datetime, timedelta
 import random
-
+import string
 
 def seed_large():
     try:
