@@ -1,8 +1,10 @@
 from applygo import db, app
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, UserRole, CvTemplate, \
+    CompanyStatus
 import hashlib
 from datetime import datetime, timedelta
 import random
+import string
 
 def seed_large():
     try:
@@ -12,6 +14,8 @@ def seed_large():
         db.session.query(Company).delete()
         db.session.query(CandidateProfile).delete()
         db.session.query(User).delete()
+        db.session.query(CvTemplate).delete()  # <-- Thêm dòng này để xóa templates cũ
+        db.session.commit()
 
         # --- Tạo Admin ---
         admin = User(
@@ -22,6 +26,20 @@ def seed_large():
         )
         db.session.add(admin)
         db.session.commit()
+
+        # --- Tạo 3 templates CV cụ thể ---
+        # Trong file seed_data.py, sửa lại danh sách templates
+        templates = [
+            CvTemplate(name="Simple", html_file="simple", preview_image="Image/cv_previews/simple.png"),
+            CvTemplate(name="Modern", html_file="modern", preview_image="Image/cv_previews/modern.png"),
+            CvTemplate(name="Professional", html_file="professional",
+                       preview_image="Image/cv_previews/professional.png")
+        ]
+
+        for t in templates:
+            db.session.add(t)
+        db.session.commit()
+        print("✅ Templates CV đã được tạo")
 
         # --- Tạo 20 ứng viên ---
         candidates = []
@@ -37,6 +55,9 @@ def seed_large():
             "Machine Learning, Python",
             "Data Analysis, Python, SQL"
         ]
+        # Tạo danh sách các tên file template để gán ngẫu nhiên cho ứng viên
+        cv_template_files = [t.html_file for t in templates]
+
         for i in range(1, 21):
             user = User(
                 username=f"user{i}",
@@ -52,8 +73,9 @@ def seed_large():
                 full_name=f"Candidate {i}",
                 phone=f"0900{str(i).zfill(4)}",
                 skills=random.choice(skills_list),
-                experience=f"{random.randint(1,10)} years experience",
-                education="Bachelor of Computer Science"
+                experience=f"{random.randint(1, 10)} years experience",
+                education="Bachelor of Computer Science",
+                cv_template=random.choice(cv_template_files)  # <-- Gán template ngẫu nhiên
             )
             db.session.add(profile)
             db.session.commit()
@@ -74,8 +96,11 @@ def seed_large():
             company = Company(
                 user_id=user.id,
                 name=f"Company {i}",
+                status=CompanyStatus.APPROVED.value,
+                mst=''.join(random.choices(string.digits, k=10)),
                 address=f"{i*10} Nguyen Trai, Hanoi",
-                website=f"www.company{i}.com"
+                website=f"www.company{i}.com",
+
             )
             db.session.add(company)
             db.session.commit()
@@ -91,7 +116,7 @@ def seed_large():
                     title=f"Job {j} at {company.name}",
                     description=f"Job description for Job {j} at {company.name}",
                     location=random.choice(["Hanoi", "Ho Chi Minh", "Da Nang"]),
-                    salary=f"{15+j*5}-{20+j*5} triệu",
+                    salary=f"{15 + j * 5}-{20 + j * 5} triệu",
                     created_at=datetime.now() - timedelta(days=created_offset)
                 )
                 db.session.add(job)
@@ -116,6 +141,7 @@ def seed_large():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Lỗi khi tạo dữ liệu siêu lớn: {e}")
+
 
 if __name__ == "__main__":
     with app.app_context():

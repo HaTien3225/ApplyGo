@@ -25,6 +25,12 @@ class JobStatus(Enum):
     CLOSED = "Closed"
     PAUSED = "Paused"
 
+class CompanyStatus(Enum):
+    __table_args__ = {'extend_existing': True}
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    DECLINED = "Declined"
+
 
 class User(db.Model, UserMixin):
     __table_args__ = {'extend_existing': True}
@@ -35,7 +41,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), nullable=False, default=UserRole.CANDIDATE.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    image_url = db.Column(db.String(500))
+    image_url = db.Column(db.String(500), nullable=True)
     candidate_profile = db.relationship("CandidateProfile", back_populates="user", uselist=False)
     company = db.relationship("Company", back_populates="user", uselist=False)
     activities = db.relationship("ActivityLog", back_populates="user", cascade="all, delete-orphan")
@@ -62,6 +68,8 @@ class CandidateProfile(db.Model):
     skills = db.Column(db.Text, nullable=True)
     experience = db.Column(db.Text, nullable=True)
     education = db.Column(db.Text, nullable=True)
+    cv_template = db.Column(db.String(50), default='simple')
+    uploaded_cv_path = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -81,7 +89,9 @@ class Company(db.Model):
     website = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    logo_url = db.Column(db.String(500))
+    logo_url = db.Column(db.String(500), nullable=True)
+    mst = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default=CompanyStatus.PENDING.value)
     user = db.relationship("User", back_populates="company")
     jobs = db.relationship("Job", back_populates="company", cascade="all, delete-orphan")
 
@@ -97,7 +107,7 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     salary = db.Column(db.String(50), nullable=True)
-    status = db.Column(db.String(20), default=JobStatus.OPEN.value)
+    status = db.Column(db.String(20), nullable=False, default=JobStatus.OPEN.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -113,7 +123,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
-    status = db.Column(db.String(20), default=ApplicationStatus.PENDING.value)
+    status = db.Column(db.String(20),nullable=False, default=ApplicationStatus.PENDING.value)
     applied_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -136,8 +146,18 @@ class ActivityLog(db.Model):
     def __str__(self):
         return f"{self.user.username} - {self.action}"
 
+class CvTemplate(db.Model):
+    __tablename__ = "cv_template"
+    __table_args__ = {'extend_existing': True}  # <-- thêm dòng này
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    html_file = db.Column(db.String(100), nullable=False)
+    preview_image = db.Column(db.String(255), nullable=True)
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
+        # db.drop_all()
+        # db.create_all()
         print("Database created successfully!")
+

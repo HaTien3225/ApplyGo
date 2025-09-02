@@ -1,0 +1,47 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ - ApplyGO{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 800px;">
+    <div class="p-4 bg-white shadow-sm rounded-3">
+        <h3 class="mb-4">Chỉnh sửa tin tuyển dụng</h3>
+
+        <!-- Form cập nhật + xóa -->
+        <form method="POST" action="{{ url_for('edit_recruitment_post', id=job.id) }}">
+            <div class="mb-3">
+                <label for="title" class="form-label">Tiêu đề</label>
+                <input type="text" name="title" id="title" value="{{ job.title }}"
+                       class="form-control" maxlength="200" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Mô tả công việc</label>
+                <textarea name="description" id="description" rows="6"
+                          class="form-control" maxlength="5000" required>{{ job.description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="salary" class="form-label">Mức lương (VNĐ)</label>
+                <input type="text" name="salary" id="salary" value="{{ job.salary }}"
+                       class="form-control" min="0" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="location" class="form-label">Địa điểm</label>
+                <input type="text" name="location" id="location" value="{{ job.location }}"
+                       class="form-control" maxlength="100" required>
+            </div>
+
+            <!-- Nút cập nhật + xóa về bên phải -->
+            <div class="d-flex justify-content-end mt-4 gap-2">
+                <button type="submit" class="btn btn-primary px-4">Cập nhật</button>
+        </form>
+        <form method="POST" action="{{ url_for('delete_recruitment_post', id=job.id) }}"
+              onsubmit="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này không?');">
+                <button type="submit" class="btn btn-danger px-4">Xóa</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "layout/base.html" %}
+
+{% block title %}CV Modern của {{ profile.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-end mb-3">
+        <button id="editBtn" class="btn btn-primary me-2"><i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa</button>
+        <button id="saveBtn" class="btn btn-success" style="display: none;"><i class="bi bi-save me-2"></i>Lưu</button>
+    </div>
+
+    <form id="cvForm" method="POST" action="{{ url_for('create_cv') }}">
+        <div class="cv-container" style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); overflow: hidden; display: flex; font-family: 'Roboto', sans-serif;">
+
+            <div class="left-column" style="background-color: #f4f7f6; padding: 40px; width: 35%;">
+                <div class="header-section text-center" style="margin-bottom: 30px;">
+                    <h1 style="font-size: 2.5em; font-weight: 500; color: #1a1a1a; margin: 0;">
+                        <span class="view-mode">{{ profile.full_name }}</span>
+                        <input type="text" name="full_name" class="form-control edit-mode" value="{{ profile.full_name }}" style="display: none;">
+                    </h1>
+                    <p style="font-size: 1em; color: #007bff; margin: 5px 0 0; font-weight: 300;">
+                        <span class="view-mode">Ứng viên xuất sắc</span>
+                        <input type="text" name="title" class="form-control edit-mode" value="Ứng viên xuất sắc" style="display: none;">
+                    </p>
+                </div>
+
+                <div class="section mt-4">
+                    <h2 style="font-size: 1.4em; color: #1a1a1a; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-weight: 500;">Liên hệ</h2>
+                    <ul class="contact-info-list" style="list-style: none; padding: 0; margin-top: 15px;">
+                        <li style="margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-envelope-fill" style="margin-right: 12px; color: #007bff;"></i>
+                            <span class="view-mode" style="color: #555;">{{ profile.user.email }}</span>
+                            <input type="email" name="email" class="form-control edit-mode" value="{{ profile.user.email }}" style="display: none;">
+                        </li>
+                        <li style="margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-telephone-fill" style="margin-right: 12px; color: #007bff;"></i>
+                            <span class="view-mode" style="color: #555;">{{ profile.phone }}</span>
+                            <input type="text" name="phone" class="form-control edit-mode" value="{{ profile.phone }}" style="display: none;">
+                        </li>
+                        <li style="margin-bottom: 15px; display: flex; align-items: center;"><i class="bi bi-geo-alt-fill" style="margin-right: 12px; color: #007bff;"></i>
+                            <span class="view-mode" style="color: #555;">[Địa chỉ của bạn]</span>
+                            <input type="text" name="address" class="form-control edit-mode" value="[Địa chỉ của bạn]" style="display: none;">
+                        </li>
+                    </ul>
+                </div>
+
+                {% if profile.skills %}
+                <div class="section mt-4">
+                    <h2 style="font-size: 1.4em; color: #1a1a1a; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-weight: 500;">Kỹ năng</h2>
+                    <div class="skill-list" style="list-style: none; padding: 0; margin-top: 15px;">
+                        <span class="view-mode">
+                            {% for skill in profile.skills.split(',') %}
+                                <span style="background-color: #e0e0e0; color: #444; padding: 6px 12px; border-radius: 20px; margin: 4px; font-size: 0.9em; display: inline-block;">{{ skill.strip() }}</span>
+                            {% endfor %}
+                        </span>
+                        <textarea name="skills" class="form-control edit-mode" rows="3" style="display: none;">{{ profile.skills }}</textarea>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="right-column" style="padding: 40px; width: 65%; background: #fff;">
+                {% if profile.summary %}
+                <div class="section mb-4">
+                    <h2 style="font-size: 1.4em; color: #1a1a1a; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-weight: 500;">Tóm tắt</h2>
+                    <p style="margin-top: 10px; line-height: 1.6; color: #555;">
+                        <span class="view-mode">{{ profile.summary }}</span>
+                        <textarea name="summary" class="form-control edit-mode" rows="3" style="display: none;">{{ profile.summary }}</textarea>
+                    </p>
+                </div>
+                {% endif %}
+
+                {% if profile.experience %}
+                <div class="section mb-4">
+                    <h2 style="font-size: 1.4em; color: #1a1a1a; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-weight: 500;">Kinh nghiệm</h2>
+                    <p style="margin-top: 10px; line-height: 1.6; font-weight: bold; color: #333;">
+                        <span class="view-mode">{{ profile.experience }}</span>
+                        <textarea name="experience" class="form-control edit-mode" rows="5" style="display: none;">{{ profile.experience }}</textarea>
+                    </p>
+                    <p style="margin-top: 5px; line-height: 1.4; color: #555;">[Mô tả chi tiết về dự án, vai trò, thành tựu đạt được]</p>
+                </div>
+                {% endif %}
+
+                {% if profile.education %}
+                <div class="section mb-4">
+                    <h2 style="font-size: 1.4em; color: #1a1a1a; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-weight: 500;">Học vấn</h2>
+                    <p style="margin-top: 10px; line-height: 1.6; font-weight: bold; color: #333;">
+                        <span class="view-mode">{{ profile.education }}</span>
+                        <textarea name="education" class="form-control edit-mode" rows="4" style="display: none;">{{ profile.education }}</textarea>
+                    </p>
+                    <p style="margin-top: 5px; line-height: 1.4; color: #555;">[Chi tiết về trường học, GPA, các khóa học nổi bật]</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('editBtn').addEventListener('click', function() {
+        document.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'block');
+        this.style.display = 'none';
+        document.getElementById('saveBtn').style.display = 'block';
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        document.getElementById('cvForm').submit();
+    });
+</script>
+{% endblock %}

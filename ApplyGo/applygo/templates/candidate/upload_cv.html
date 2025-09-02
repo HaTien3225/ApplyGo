@@ -1,0 +1,22 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Tải CV lên{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 600px;">
+    <h2 class="text-center mb-4">Tải CV của bạn lên</h2>
+    <div class="card p-4 shadow-sm rounded-3">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="cv_file" class="form-label">Chọn file CV (.pdf, .docx)</label>
+                <input class="form-control" type="file" id="cv_file" name="cv_file" required>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-cloud-arrow-up me-2"></i>Tải lên
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
