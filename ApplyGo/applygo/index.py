@@ -12,15 +12,17 @@ from applygo.models import User, Job, Company, Application, UserRole, JobStatus
 # ------------------------
 # TRANG CHỦ
 # ------------------------
+@app.context_processor
+def inject_user_roles():
+    return dict(UserRole=UserRole)
+
 @app.route('/')
 def index():
     jobs = dao.get_all_jobs()[:10]  # 10 việc mới nhất
     companies = dao.get_companies()
     return render_template('page/index.html', jobs=jobs, companies=companies)
 
-@app.context_processor
-def inject_user_roles():
-    return dict(UserRole=UserRole)
+
 # ------------------------
 # AUTH
 # ------------------------
