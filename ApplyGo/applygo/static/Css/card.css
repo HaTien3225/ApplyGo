@@ -1,14 +1,45 @@
-/* CSS tùy chỉnh cho các thành phần trên trang */
+/* Card container */
 .card {
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease, filter 0.3s ease; /* Thêm hiệu ứng sáng cho hình ảnh */
+    background: #ffffff; /* Nền trắng sạch */
+    border: 1px solid #e0e0e0; /* Viền mỏng, tinh tế */
+    border-radius: 1rem; /* Bo tròn góc */
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Bóng đổ nhẹ, tinh tế hơn */
 }
 
+/* Hiệu ứng khi di chuột qua */
 .card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    filter: brightness(1.1); /* Làm sáng hình ảnh khi hover */
+    transform: translateY(-5px); /* Nâng thẻ lên một chút */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Bóng đổ sâu hơn khi hover */
 }
-/* Tùy chỉnh khoảng cách giữa các thẻ */
-.row.g-4 {
-    margin-bottom: 40px;
+
+/* Header card */
+.card-header {
+    background: #f8f9fa; /* Nền header xám rất nhạt */
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
 }
+
+.card-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #2c3e50; /* Màu chữ xanh than chuyên nghiệp */
+    letter-spacing: 0.5px;
+    font-size: 1.8rem;
+}
+
+.card-header .bi {
+    font-size: 1.8rem;
+    color: #ffffff; /* Màu xanh dương */
+}
+
+
+
+
+
+
+
+
