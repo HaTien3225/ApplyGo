@@ -32,10 +32,10 @@
                         <li><a class="dropdown-item" href="/candidate/cv/upload">⬆️ Tải CV lên</a></li>
                     </ul>
                     {% else %}
-                    <a class="nav-link text-danger" href="/register">📄 Tạo CV  </a>
+                    <a class="nav-link text-danger" href="/register">📄 Tạo CV </a>
                     {% endif %}
 
-                {% if current_user.is_authenticated and current_user.role == UserRole.COMPANY.value %}
+                    {% if current_user.is_authenticated and current_user.role == UserRole.COMPANY.value %}
                 <li class="nav-item">
                     <a class="nav-link" href="/recruitment-post-manager">Tin tuyển dụng của tôi</a>
                 </li>
@@ -46,11 +46,24 @@
             <!-- Menu bên phải -->
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link disabled">👤 {{ current_user.username }} </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="/logout">Đăng xuất</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        👤 {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        {% if current_user.is_candidate() %}
+                        <li><a class="dropdown-item" href="/candidate/profile">Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="/candidate/cv/manage">Quản lý CV</a></li>
+                        {% elif current_user.is_company() %}
+                        <li><a class="dropdown-item" href="/company/profile">Thông tin công ty</a></li>
+                        <li><a class="dropdown-item" href="/recruitment-post-manager">Quản lý tuyển dụng</a></li>
+                        {% endif %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="/logout">Đăng xuất</a></li>
+                    </ul>
                 </li>
                 {% else %}
                 <li class="nav-item">
@@ -61,6 +74,7 @@
                 </li>
                 {% endif %}
             </ul>
+
         </div>
     </div>
 </nav>
