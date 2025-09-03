@@ -5,7 +5,7 @@ from pipes import quote
 import cloudinary
 from flask_sqlalchemy.query import Query
 from applygo import app, db
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, Category
 
 
 def hash_password(password: str) -> str:
@@ -73,6 +73,8 @@ def search_jobs(keyword=None, company_id=None):
 def get_companies():
     return Company.query.all()
 
+def get_categories():
+    return Category.query.all()
 
 def get_company_by_id(company_id: int):
     return Company.query.get(company_id)
