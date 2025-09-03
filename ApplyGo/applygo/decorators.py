@@ -14,25 +14,15 @@ def loggedin(f):
     return decorated_function
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
-        @login_required  # đảm bảo user đã login
+        @login_required
         def decorated_function(*args, **kwargs):
             if current_user.role not in roles:
-                abort(403)  # trả 403 Forbidden nếu không đủ quyền
+                abort(403)
             return f(*args, **kwargs)
+
         return decorated_function
+
     return decorator
