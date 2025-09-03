@@ -103,6 +103,7 @@ class Job(db.Model):
     __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
@@ -110,13 +111,23 @@ class Job(db.Model):
     status = db.Column(db.String(20), nullable=False, default=JobStatus.OPEN.value)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-
+    category = db.relationship("Category", back_populates="jobs")
     company = db.relationship("Company", back_populates="jobs")
     applications = db.relationship("Application", back_populates="job", cascade="all, delete-orphan")
 
     def __str__(self):
         return f"{self.title} ({self.status})"
 
+class Category(db.Model):
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+
+    jobs = db.relationship("Job", back_populates="category", cascade="all, delete-orphan")
+
+    def __str__(self):
+        return self.name
 
 class Application(db.Model):
     __table_args__ = {'extend_existing': True}

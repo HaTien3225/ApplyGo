@@ -15,32 +15,43 @@
                     <a class="nav-link" href="/jobs">Việc làm</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/companies">Công ty </a>
+                    <a class="nav-link" href="/companies">Công ty</a>
                 </li>
 
+                {% if current_user.is_authenticated and current_user.is_candidate() %}
+                <!-- Chỉ ứng viên mới thấy menu CV -->
                 <li class="nav-item dropdown">
-                    {% if current_user.is_authenticated %}
                     <a class="nav-link dropdown-toggle" href="#" id="cvDropdown" role="button" data-bs-toggle="dropdown"
                        aria-expanded="false">
-                        📄 Tạo CV
+                        📄 CV của tôi
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="cvDropdown">
                         <li><a class="dropdown-item" href="/candidate/cv/create">✍️ Mẫu CV đơn giản</a></li>
-                        <li><a class="dropdown-item" href="/candidate/cv/view">👀 Xem CV</a>
+                        <li><a class="dropdown-item" href="/candidate/cv/view">👀 Xem CV</a></li>
                         <li><a class="dropdown-item" href="/candidate/cv/select_template">🎨 Chọn mẫu CV</a></li>
                         <li><a class="dropdown-item" href="/candidate/cv/manage">📂 Quản lý CV</a></li>
                         <li><a class="dropdown-item" href="/candidate/cv/upload">⬆️ Tải CV lên</a></li>
                     </ul>
-                    {% else %}
-                    <a class="nav-link text-danger" href="/register">📄 Tạo CV </a>
-                    {% endif %}
+                </li>
+                {% elif not current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/register">📄 Tạo CV</a>
+                </li>
+                {% endif %}
 
-                    {% if current_user.is_authenticated and current_user.role == UserRole.COMPANY.value %}
+                {% if current_user.is_authenticated and current_user.is_company() %}
+                <!-- Chỉ công ty mới thấy menu tuyển dụng -->
                 <li class="nav-item">
                     <a class="nav-link" href="/recruitment-post-manager">Tin tuyển dụng của tôi</a>
                 </li>
                 {% endif %}
 
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                <!-- Chỉ admin mới thấy link quản trị -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin">Quản trị hệ thống</a>
+                </li>
+                {% endif %}
             </ul>
 
             <!-- Menu bên phải -->
@@ -58,10 +69,10 @@
                         {% elif current_user.is_company() %}
                         <li><a class="dropdown-item" href="/company/profile">Thông tin công ty</a></li>
                         <li><a class="dropdown-item" href="/recruitment-post-manager">Quản lý tuyển dụng</a></li>
+                        {% elif current_user.is_admin() %}
+                        <li><a class="dropdown-item" href="/admin">Trang quản trị</a></li>
                         {% endif %}
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="/logout">Đăng xuất</a></li>
                     </ul>
                 </li>
@@ -74,7 +85,6 @@
                 </li>
                 {% endif %}
             </ul>
-
         </div>
     </div>
 </nav>
