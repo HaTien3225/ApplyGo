@@ -6,7 +6,7 @@ from sqlalchemy import extract
 from applygo import app, db, dao, login
 from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary
 from applygo.decorators import loggedin, role_required
-from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus
+from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category
 import os
 import math
 
@@ -18,9 +18,10 @@ def inject_user_roles():
 
 @app.route('/')
 def index():
-    jobs = dao.get_all_jobs()[:10]
+    jobs = dao.get_all_jobs()[:5]
     companies = dao.get_companies()
-    return render_template('page/index.html', jobs=jobs, companies=companies)
+    categories = dao.get_categories()
+    return render_template('page/index.html', jobs=jobs, companies=companies, categories=categories)
 
 
 @app.route("/login-admin/", methods=["GET", "POST"])
@@ -32,7 +33,7 @@ def login_admin():
         user = dao.auth_user(username=username, password=password)
         if user and user.is_admin():
             login_user(user)
-            return redirect('/admin')
+            return redirect('/admin/')
         else:
             err_msg = "Sai tên đăng nhập hoặc không có quyền truy cập Admin."
     return render_template("auth/login_admin.html", err_msg=err_msg)
@@ -108,16 +109,7 @@ def load_user(user_id):
     return dao.get_user_by_id(int(user_id))
 
 
-@app.route('/jobs/')
-def jobs():
-    keyword = request.args.get('keyword')
-    company_id = request.args.get('company_id', type=int)
-    jobs = dao.search_jobs(keyword=keyword, company_id=company_id)
-    companies = dao.get_companies()
-    return render_template('jobs.html', jobs=jobs, companies=companies)
-
-
-@app.route('/edit-recruitment-post/<int:id>', methods=['POST'])
+@app.route('/edit-recruitment-post/<int:id>/', methods=['POST'])
 @login_required
 @role_required(UserRole.COMPANY.value)
 def edit_recruitment_post(id):
@@ -176,7 +168,7 @@ def edit_recruitment_post(id):
     return redirect(url_for('recruitment_post_detail', id=id))
 
 
-@app.route('/recruitment-post-detail/<int:id>', methods=['GET'])
+@app.route('/recruitment-post-detail/<int:id>/', methods=['GET'])
 @login_required
 @role_required(UserRole.COMPANY.value)
 def recruitment_post_detail(id):
@@ -184,7 +176,7 @@ def recruitment_post_detail(id):
     return render_template('company/edit_recruitment_post.html', job=job)
 
 
-@app.route('/recruitment-post-manager/<int:id>/delete', methods=['POST'])
+@app.route('/recruitment-post-manager/<int:id>/delete/', methods=['POST'])
 @login_required
 @role_required(UserRole.COMPANY.value)
 def delete_recruitment_post(id):
@@ -231,7 +223,7 @@ def recruitment_post_manager():
     return render_template('company/recruitment_post_manager.html', company_jobs=jobs, page=page)
 
 
-@app.route('/recruitment-post/create', methods=['POST', 'GET'])
+@app.route('/recruitment-post/create/', methods=['POST', 'GET'])
 @role_required(UserRole.COMPANY.value)
 def create_recruitment_post():
     if request.method == 'POST':
@@ -296,7 +288,13 @@ def job_detail(job_id):
     if not job:
         flash("Tin tuyển dụng không tồn tại!", "warning")
         return redirect(url_for('jobs'))
-    return render_template('job_detail.html', job=job)
+    similar_jobs = Job.query.filter(
+        Job.location == job.location,
+        Job.category==job.category,
+        Job.id != job.id
+    ).limit(5).all()
+
+    return render_template('candidate/job_detail.html', job=job, similar_jobs=similar_jobs)
 
 
 @app.route('/apply/<int:job_id>/', methods=['POST'])
@@ -317,7 +315,7 @@ def applications():
     return render_template('applications.html', applications=apps)
 
 
-@app.route("/candidate/cv/create", methods=["GET", "POST"])
+@app.route("/candidate/cv/create/", methods=["GET", "POST"])
 @login_required
 def create_cv():
     if not current_user.is_candidate():
@@ -361,7 +359,7 @@ def create_cv():
     return render_template("candidate/create_cv.html", profile=profile)
 
 
-@app.route("/candidate/cv/view")
+@app.route("/candidate/cv/view/")
 @login_required
 def view_cv():
     if not current_user.is_candidate():
@@ -378,7 +376,7 @@ def view_cv():
     return render_template(template_file, profile=profile)
 
 
-@app.route('/candidate/cv/select_template', methods=['GET', 'POST'])
+@app.route('/candidate/cv/select_template/', methods=['GET', 'POST'])
 @login_required
 def select_cv_template():
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
@@ -406,7 +404,7 @@ def select_cv_template():
     return render_template('candidate/select_template.html', templates=templates, profile=profile)
 
 
-@app.route("/candidate/cv/preview/<template_name>")
+@app.route("/candidate/cv/preview/<template_name>/")
 @login_required
 def preview_cv(template_name):
     fake_profile = CandidateProfile(
@@ -424,7 +422,7 @@ def preview_cv(template_name):
     return render_template(f"candidate/cv_templates/{template.html_file}.html", profile=fake_profile)
 
 
-@app.route("/candidate/cv/manage")
+@app.route("/candidate/cv/manage/")
 @login_required
 def manage_cv():
     if not current_user.is_candidate():
@@ -444,7 +442,7 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route("/candidate/cv/upload", methods=["GET", "POST"])
+@app.route("/candidate/cv/upload/", methods=["GET", "POST"])
 @login_required
 def upload_cv():
     if not current_user.is_candidate():
@@ -498,7 +496,7 @@ def upload_cv():
     return render_template("candidate/upload_cv.html", profile=profile)
 
 
-@app.route("/candidate/cv/download/<filename>")
+@app.route("/candidate/cv/download/<filename>/")
 @login_required
 def serve_uploaded_cv(filename):
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
@@ -510,7 +508,7 @@ def serve_uploaded_cv(filename):
     return "File không tồn tại hoặc bạn không có quyền truy cập.", 404
 
 
-@app.route("/candidate/cv/download")
+@app.route("/candidate/cv/download/")
 @login_required
 def download_cv_latest():
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
@@ -522,7 +520,7 @@ def download_cv_latest():
     return send_from_directory(os.path.join(app.static_folder, 'uploads'), profile.uploaded_cv_path, as_attachment=True)
 
 
-@app.route('/candidate/profile', methods=['GET', 'POST'])
+@app.route('/candidate/profile/', methods=['GET', 'POST'])
 @login_required
 def candidate_profile():
     if not current_user.is_candidate():
@@ -585,7 +583,7 @@ def candidate_profile():
     )
 
 
-@app.route('/company/profile', methods=['GET', 'POST'])
+@app.route('/company/profile/', methods=['GET', 'POST'])
 @login_required
 def company_profile():
     if not current_user.is_company():
@@ -660,6 +658,77 @@ def company_profile():
         chart_data=chart_data,
         months=months,
         status=status
+    )
+
+
+@app.route("/jobs/")
+def jobs():
+    page = request.args.get("page", 1, type=int)
+    kw = request.args.get("kw", "")
+    company_id = request.args.get("company_id", type=int)
+    status = request.args.get("status", "")
+    salary_range = request.args.get("salary_range", "")
+    location = request.args.get("location", "")
+    posted = request.args.get("posted", "")
+    category_id = request.args.get("category_id", type=int)
+
+    query = Job.query
+
+    # Lọc theo từ khóa
+    if kw:
+        query = query.filter(Job.title.ilike(f"%{kw}%"))
+
+    # Lọc theo công ty
+    if company_id:
+        query = query.filter(Job.company_id == company_id)
+
+    # Lọc theo trạng thái
+    if status:
+        query = query.filter(Job.status == status)
+
+    # Lọc theo khoảng lương
+    if salary_range:
+        try:
+            min_salary, max_salary = map(int, salary_range.split("-"))
+            query = query.filter(Job.salary >= min_salary, Job.salary <= max_salary)
+        except:
+            pass
+
+    # Lọc theo địa điểm
+    if location:
+        query = query.filter(Job.location.ilike(f"%{location}%"))
+
+    # Lọc theo ngày đăng
+    if posted:
+        days = int(posted)
+        cutoff = datetime.now() - timedelta(days=days)
+        query = query.filter(Job.created_at >= cutoff)
+
+    if category_id:
+        query = query.filter(Job.category_id == category_id)
+
+    # Phân trang
+    page_size = app.config["PAGE_SIZE"]
+    jobs = query.order_by(Job.created_at.desc()).paginate(page=page, per_page=page_size, error_out=False)
+
+    companies = Company.query.all()
+    categories = Category.query.all()
+
+    return render_template(
+        "candidate/jobs.html",
+        jobs=jobs.items,
+        total=jobs.total,
+        page=page,
+        page_size=page_size,
+        companies=companies,
+        kw=kw,
+        company_id=company_id,
+        status=status,
+        salary_range=salary_range,
+        location=location,
+        posted=posted,
+        categories=categories,
+        category_id=category_id
     )
 
 
