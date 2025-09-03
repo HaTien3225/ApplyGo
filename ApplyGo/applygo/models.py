@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from applygo import db, app
 
@@ -24,6 +23,7 @@ class JobStatus(Enum):
     OPEN = "Open"
     CLOSED = "Closed"
     PAUSED = "Paused"
+
 
 class CompanyStatus(Enum):
     __table_args__ = {'extend_existing': True}
@@ -123,7 +123,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     candidate_profile_id = db.Column(db.Integer, db.ForeignKey("candidate_profile.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("job.id"), nullable=False)
-    status = db.Column(db.String(20),nullable=False, default=ApplicationStatus.PENDING.value)
+    status = db.Column(db.String(20), nullable=False, default=ApplicationStatus.PENDING.value)
     applied_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -146,18 +146,18 @@ class ActivityLog(db.Model):
     def __str__(self):
         return f"{self.user.username} - {self.action}"
 
+
 class CvTemplate(db.Model):
-    __tablename__ = "cv_template"
-    __table_args__ = {'extend_existing': True}  # <-- thêm dòng này
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     html_file = db.Column(db.String(100), nullable=False)
     preview_image = db.Column(db.String(255), nullable=True)
 
+
 if __name__ == "__main__":
     with app.app_context():
-        # db.drop_all()
-        # db.create_all()
+        db.drop_all()
+        db.create_all()
         print("Database created successfully!")
-

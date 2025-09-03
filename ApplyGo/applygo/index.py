@@ -1,39 +1,28 @@
-from datetime import datetime
-
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import extract
 from applygo import app, db, dao, login
-from applygo.dao import get_jobs_by_company
+from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary
 from applygo.decorators import loggedin, role_required
-from applygo.models import User, Job, Company, Application, CandidateProfile, CvTemplate, UserRole, JobStatus
-# Cần thêm imports ở đầu file nếu chưa có
-from werkzeug.utils import secure_filename
+from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus
 import os
 import math
-base_dir = os.path.dirname(os.path.abspath(__file__))
-template_dir = os.path.join(base_dir, 'templates')
 
-# ------------------------
-# TRANG CHỦ
-# ------------------------
+
 @app.context_processor
 def inject_user_roles():
     return dict(UserRole=UserRole)
 
+
 @app.route('/')
 def index():
-    jobs = dao.get_all_jobs()[:10]  # 10 việc mới nhất
+    jobs = dao.get_all_jobs()[:10]
     companies = dao.get_companies()
     return render_template('page/index.html', jobs=jobs, companies=companies)
 
 
-# ------------------------
-# AUTH
-# ------------------------
-
-# Route login admin
-# ----------------------------
 @app.route("/login-admin/", methods=["GET", "POST"])
 def login_admin():
     err_msg = None
@@ -41,7 +30,7 @@ def login_admin():
         username = request.form.get("username")
         password = request.form.get("password")
         user = dao.auth_user(username=username, password=password)
-        if user and user.is_admin():  # bạn có thể hash password
+        if user and user.is_admin():
             login_user(user)
             return redirect('/admin')
         else:
@@ -62,7 +51,6 @@ def login_my_user():
             err_msg = 'Tên đăng nhập hoặc mật khẩu không đúng!'
             return render_template('auth/login.html', err_msg=err_msg)
 
-        # Kiểm tra role và login
         if user.is_candidate() or user.is_company():
             login_user(user)
         elif user.is_admin():
@@ -72,7 +60,6 @@ def login_my_user():
             err_msg = 'Người dùng không có vai trò hợp lệ!'
             return render_template('auth/login.html', err_msg=err_msg)
 
-        # Điều hướng sau khi login
         next_url = request.args.get('next')
         if not next_url or not next_url.startswith('/'):
             next_url = '/'
@@ -121,9 +108,6 @@ def load_user(user_id):
     return dao.get_user_by_id(int(user_id))
 
 
-# ------------------------
-# JOBS
-# ------------------------
 @app.route('/jobs/')
 def jobs():
     keyword = request.args.get('keyword')
@@ -132,12 +116,12 @@ def jobs():
     companies = dao.get_companies()
     return render_template('jobs.html', jobs=jobs, companies=companies)
 
+
 @app.route('/edit-recruitment-post/<int:id>', methods=['POST'])
 @login_required
 @role_required(UserRole.COMPANY.value)
 def edit_recruitment_post(id):
     job = Job.query.get_or_404(id)
-    # Chỉ cho phép công ty chủ quản sửa job của mình
     if job.company_id != current_user.company.id:
         flash("Bạn không có quyền chỉnh sửa tin tuyển dụng này", "danger")
         return redirect(url_for('recruitment_post_manager'))
@@ -147,7 +131,6 @@ def edit_recruitment_post(id):
     description = request.form.get('description', '').strip()
     location = request.form.get('location', '').strip()
 
-    # Dùng BeautifulSoup lọc HTML
     def clean_html(text):
         return BeautifulSoup(text, "html.parser").get_text()
 
@@ -155,7 +138,6 @@ def edit_recruitment_post(id):
     description = clean_html(description)
     location = clean_html(location)
 
-    # Validate
     if not title:
         flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
         return redirect(url_for('edit_recruitment_post', id=id))
@@ -184,7 +166,6 @@ def edit_recruitment_post(id):
         flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
         return redirect(url_for('edit_recruitment_post', id=id))
 
-    # Update job
     job.title = title
     job.salary = salary
     job.description = description
@@ -192,16 +173,16 @@ def edit_recruitment_post(id):
     db.session.commit()
 
     flash("Cập nhật tin tuyển dụng thành công!", "success")
-    return redirect(url_for('recruitment_post_detail',id=id))
+    return redirect(url_for('recruitment_post_detail', id=id))
+
 
 @app.route('/recruitment-post-detail/<int:id>', methods=['GET'])
 @login_required
 @role_required(UserRole.COMPANY.value)
 def recruitment_post_detail(id):
     job = Job.query.get_or_404(id)
-
-    # GET request → render form với dữ liệu job
     return render_template('company/edit_recruitment_post.html', job=job)
+
 
 @app.route('/recruitment-post-manager/<int:id>/delete', methods=['POST'])
 @login_required
@@ -218,6 +199,7 @@ def delete_recruitment_post(id):
     flash("Xóa tin tuyển dụng thành công!", "success")
     return redirect(url_for('recruitment_post_manager'))
 
+
 @app.route('/recruitment-post-manager/')
 @role_required(UserRole.COMPANY.value)
 def recruitment_post_manager():
@@ -230,7 +212,6 @@ def recruitment_post_manager():
     total_jobs = Job.query.filter(Job.company_id == company.id).count()
     if page >= math.ceil(total_jobs / page_size):
         page = 1
-     # 'asc' hoặc 'desc'
     sort_by = False
     if sort == 'desc':
         sort_by = False
@@ -244,12 +225,13 @@ def recruitment_post_manager():
     if status == "PAUSED":
         Jstatus = JobStatus.PAUSED
 
-    jobs , total = get_jobs_by_company(company_id=company.id,sort_by_date_incr=sort_by,page_size=12,page=page,kw=kw,status=Jstatus)
+    jobs, total = get_jobs_by_company(company_id=company.id, sort_by_date_incr=sort_by, page_size=12, page=page, kw=kw,
+                                      status=Jstatus)
     print(total_jobs)
-    # print(jobs[0].title)
-    return render_template('company/recruitment_post_manager.html',company_jobs=jobs,page=page)
+    return render_template('company/recruitment_post_manager.html', company_jobs=jobs, page=page)
 
-@app.route('/recruitment-post/create', methods=['POST','GET'])
+
+@app.route('/recruitment-post/create', methods=['POST', 'GET'])
 @role_required(UserRole.COMPANY.value)
 def create_recruitment_post():
     if request.method == 'POST':
@@ -258,7 +240,6 @@ def create_recruitment_post():
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
 
-        # Dùng BeautifulSoup để loại bỏ HTML tags
         def clean_html(text):
             soup = BeautifulSoup(text, "html.parser")
             return soup.get_text()
@@ -267,7 +248,6 @@ def create_recruitment_post():
         description = clean_html(description)
         location = clean_html(location)
 
-        # Validate
         if not title:
             flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
             return redirect(url_for('create_recruitment_post'))
@@ -275,7 +255,7 @@ def create_recruitment_post():
             flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
             return redirect(url_for('create_recruitment_post'))
 
-        if not salary :
+        if not salary:
             flash("Chưa nhập mức lương", "danger")
             return redirect(url_for('create_recruitment_post'))
         elif len(salary) > 20:
@@ -295,7 +275,6 @@ def create_recruitment_post():
             flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
             return redirect(url_for('create_recruitment_post'))
 
-        # Nếu hợp lệ thì lưu Job mới
         job = Job(
             company_id=current_user.company.id,
             title=title,
@@ -310,6 +289,7 @@ def create_recruitment_post():
         return redirect(url_for('recruitment_post_manager'))
     return render_template('company/create_recruitment_post.html')
 
+
 @app.route('/jobs/<int:job_id>/')
 def job_detail(job_id):
     job = dao.get_job_by_id(job_id)
@@ -319,9 +299,6 @@ def job_detail(job_id):
     return render_template('job_detail.html', job=job)
 
 
-# ------------------------
-# APPLY
-# ------------------------
 @app.route('/apply/<int:job_id>/', methods=['POST'])
 @login_required
 def apply_job(job_id):
@@ -333,23 +310,19 @@ def apply_job(job_id):
     return redirect(url_for('job_detail', job_id=job_id))
 
 
-# ------------------------
-# APPLICATIONS
-# ------------------------
 @app.route('/applications/')
 @login_required
 def applications():
     apps = dao.get_applications_by_user(current_user.id)
     return render_template('applications.html', applications=apps)
 
+
 @app.route("/candidate/cv/create", methods=["GET", "POST"])
 @login_required
 def create_cv():
-    # kiểm tra user có phải candidate không
     if not current_user.is_candidate():
         flash("Chỉ ứng viên mới có thể tạo CV!", "danger")
         return redirect(url_for("index"))
-
 
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
 
@@ -360,14 +333,13 @@ def create_cv():
         experience = request.form.get("experience")
         education = request.form.get("education")
 
-
-        if profile:  # update nếu đã có CV
+        if profile:
             profile.full_name = full_name
             profile.phone = phone
             profile.skills = skills
             profile.experience = experience
             profile.education = education
-        else:  # tạo mới
+        else:
             profile = CandidateProfile(
                 user_id=current_user.id,
                 full_name=full_name,
@@ -381,7 +353,6 @@ def create_cv():
         try:
             db.session.commit()
             flash("CV của bạn đã được lưu!", "success")
-            # Dòng này đã được thay đổi
             return redirect(url_for("view_cv"))
         except Exception as e:
             db.session.rollback()
@@ -397,7 +368,6 @@ def view_cv():
         flash("Chỉ ứng viên mới có thể xem CV!", "danger")
         return redirect(url_for("index"))
 
-    # Lấy hồ sơ của người dùng hiện tại
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
 
     if not profile or not profile.cv_template:
@@ -418,7 +388,6 @@ def select_cv_template():
         template_id = request.form.get('template_id', type=int)
 
         if not profile:
-            # Nếu người dùng chưa có profile, tạo một profile rỗng
             profile = CandidateProfile(user_id=current_user.id)
             db.session.add(profile)
             db.session.commit()
@@ -427,8 +396,8 @@ def select_cv_template():
         if selected_template:
             profile.cv_template = selected_template.html_file
             db.session.commit()
-            flash(f"Mẫu CV '{selected_template.name}' đã được chọn. Bây giờ bạn có thể chỉnh sửa thông tin CV.", "success")
-            # Dòng này đã được thay đổi để chuyển đến trang xem
+            flash(f"Mẫu CV '{selected_template.name}' đã được chọn. Bây giờ bạn có thể chỉnh sửa thông tin CV.",
+                  "success")
             return redirect(url_for('view_cv'))
         else:
             flash("Mẫu CV không hợp lệ.", "danger")
@@ -440,7 +409,6 @@ def select_cv_template():
 @app.route("/candidate/cv/preview/<template_name>")
 @login_required
 def preview_cv(template_name):
-    # Luôn sử dụng dữ liệu giả để xem trước
     fake_profile = CandidateProfile(
         full_name="Nguyễn Văn A",
         phone="0123456789",
@@ -459,29 +427,21 @@ def preview_cv(template_name):
 @app.route("/candidate/cv/manage")
 @login_required
 def manage_cv():
-    # Kiểm tra quyền truy cập
     if not current_user.is_candidate():
         flash("Chỉ ứng viên mới có thể quản lý CV.", "danger")
         return redirect(url_for("index"))
 
-    # Lấy hồ sơ của ứng viên hiện tại
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
-
-    # Render template mới và truyền dữ liệu hồ sơ vào
     return render_template("candidate/manage_cv.html", profile=profile)
 
 
-# Cấu hình thư mục tải lên
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'cvs')
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'docx'}
+# Allowed extensions: include images for logos
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'jpg', 'jpeg', 'png'}
 
 
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/candidate/cv/upload", methods=["GET", "POST"])
@@ -509,27 +469,22 @@ def upload_cv():
 
         if file and allowed_file(file.filename):
             try:
-                # Tạo tên file an toàn và duy nhất
-                filename = secure_filename(file.filename)
-                # Đổi tên file để tránh trùng lặp
-                file_ext = filename.rsplit('.', 1)[1]
-                unique_filename = f"{current_user.username}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{file_ext}"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                # upload to Cloudinary (resource_type='auto' supports pdf/docx)
+                cv_url = upload_file_to_cloudinary(file, folder='applygo/cvs')
 
-                # Xóa file CV cũ nếu tồn tại
-                if profile.uploaded_cv_path:
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], profile.uploaded_cv_path)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
+                # If previously had a local file path, try to remove it
+                if profile.uploaded_cv_path and profile.uploaded_cv_path.startswith('/static/uploads'):
+                    try:
+                        old_path = os.path.join(app.static_folder, profile.uploaded_cv_path.replace('/static/', ''))
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    except Exception:
+                        pass
 
-                # Lưu file mới
-                file.save(file_path)
-
-                # Cập nhật đường dẫn file vào cơ sở dữ liệu
-                profile.uploaded_cv_path = unique_filename
+                profile.uploaded_cv_path = cv_url
                 db.session.commit()
 
-                flash("CV của bạn đã được tải lên thành công!", "success")
+                flash("CV của bạn đã được tải lên Cloudinary!", "success")
                 return redirect(url_for("manage_cv"))
 
             except Exception as e:
@@ -546,28 +501,168 @@ def upload_cv():
 @app.route("/candidate/cv/download/<filename>")
 @login_required
 def serve_uploaded_cv(filename):
-    # Kiểm tra xem file có thuộc về người dùng hiện tại không
     profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
     if profile and profile.uploaded_cv_path == filename:
-        # Phục vụ file từ thư mục đã cấu hình
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
-    # Trả về lỗi 404 nếu file không tồn tại hoặc không thuộc về người dùng
+        # if stored as URL, redirect
+        if profile.uploaded_cv_path.startswith('http'):
+            return redirect(profile.uploaded_cv_path)
+        return send_from_directory(os.path.join(app.static_folder, 'uploads'), filename, as_attachment=True)
     return "File không tồn tại hoặc bạn không có quyền truy cập.", 404
+
+
+@app.route("/candidate/cv/download")
+@login_required
+def download_cv_latest():
+    profile = CandidateProfile.query.filter_by(user_id=current_user.id).first()
+    if not profile or not profile.uploaded_cv_path:
+        return "Bạn chưa có CV.", 404
+
+    if profile.uploaded_cv_path.startswith("http"):
+        return redirect(profile.uploaded_cv_path)
+    return send_from_directory(os.path.join(app.static_folder, 'uploads'), profile.uploaded_cv_path, as_attachment=True)
+
+
+@app.route('/candidate/profile', methods=['GET', 'POST'])
+@login_required
+def candidate_profile():
+    if not current_user.is_candidate():
+        flash("Bạn không có quyền truy cập trang này!", "danger")
+        return redirect(url_for('index'))
+
+    profile = current_user.candidate_profile
+    if not profile:
+        flash("Bạn chưa tạo hồ sơ. Vui lòng tạo CV trước!", "warning")
+        return redirect(url_for('create_cv'))
+
+    try:
+        months = int(request.args.get('months', 6))
+    except ValueError:
+        months = 6
+
+    status_filter = request.args.get('status_filter', 'all')
+
+    total_applications = Application.query.filter_by(candidate_profile_id=profile.id).count()
+
+    statuses = ["Pending", "Accepted", "Rejected"]
+    applications_status_count = {
+        status: Application.query.filter_by(candidate_profile_id=profile.id, status=status).count()
+        for status in statuses
+    }
+
+    now = datetime.now()
+    start_date = datetime.min if months == 0 else now - timedelta(days=30 * months)
+
+    month_labels_query = db.session.query(
+        extract('year', Application.applied_at).label('year'),
+        extract('month', Application.applied_at).label('month')
+    ).filter(
+        Application.candidate_profile_id == profile.id,
+        Application.applied_at >= start_date
+    ).group_by('year', 'month').order_by('year', 'month').all()
+
+    labels = [f"{int(y)}-{int(m):02d}" for y, m in month_labels_query]
+
+    chart_data = {status: [] for status in statuses}
+    for y, m in month_labels_query:
+        for status in statuses:
+            count = Application.query.filter(
+                Application.candidate_profile_id == profile.id,
+                extract('year', Application.applied_at) == y,
+                extract('month', Application.applied_at) == m,
+                Application.status == status
+            ).count()
+            chart_data[status].append(count)
+
+    return render_template(
+        'profile/candidate_profile.html',
+        profile=profile,
+        total_applications=total_applications,
+        applications_status_count=applications_status_count,
+        labels=labels,
+        chart_data=chart_data,
+        months=months,
+        status_filter=status_filter
+    )
+
+
+@app.route('/company/profile', methods=['GET', 'POST'])
+@login_required
+def company_profile():
+    if not current_user.is_company():
+        flash("Bạn không có quyền truy cập trang này!", "danger")
+        return redirect(url_for('index'))
+
+    company = current_user.company
+
+    if request.method == "POST":
+        company.name = request.form.get("name")
+        company.address = request.form.get("address")
+        company.website = request.form.get("website")
+        company.mst = request.form.get("mst")
+        logo_file = request.files.get("logo")
+        if logo_file and allowed_file(logo_file.filename):
+            try:
+                # upload logo to Cloudinary
+                logo_url = upload_file_to_cloudinary(logo_file, folder='applygo/company_logos')
+                company.logo_url = logo_url
+            except Exception as e:
+                flash(f"Lỗi khi lưu logo: {str(e)}", "warning")
+        db.session.commit()
+        flash("Cập nhật thông tin công ty thành công!", "success")
+        return redirect(url_for('company_profile'))
+
+    try:
+        months = int(request.args.get("months", 6))
+    except:
+        months = 6
+    status = request.args.get("status", "all")
+
+    now = datetime.now()
+    if months > 0:
+        start_date = now - timedelta(days=30 * months)
+    else:
+        start_date = datetime(2000, 1, 1)
+
+    # Application does not have company_id: join via Job
+    month_labels_query = db.session.query(
+        extract('year', Application.applied_at).label('year'),
+        extract('month', Application.applied_at).label('month')
+    ).join(Job, Application.job_id == Job.id).filter(
+        Job.company_id == company.id,
+        Application.applied_at >= start_date
+    )
+    if status != "all":
+        month_labels_query = month_labels_query.filter(Application.status == status)
+
+    month_labels = month_labels_query.group_by('year', 'month').order_by('year', 'month').all()
+    labels = [f"{int(y)}-{int(m):02d}" for y, m in month_labels]
+
+    statuses = ["Pending", "Accepted", "Rejected"]
+    chart_data = {s: [] for s in statuses}
+
+    for y, m in month_labels:
+        for s in statuses:
+            if status != "all" and s != status:
+                chart_data[s].append(0)
+            else:
+                count = db.session.query(Application).join(Job, Application.job_id == Job.id).filter(
+                    Job.company_id == company.id,
+                    extract('year', Application.applied_at) == y,
+                    extract('month', Application.applied_at) == m,
+                    Application.status == s
+                ).count()
+                chart_data[s].append(count)
+
+    return render_template(
+        'profile/company_profile.html',
+        company=company,
+        labels=labels,
+        chart_data=chart_data,
+        months=months,
+        status=status
+    )
+
 
 if __name__ == "__main__":
     with app.app_context():
-        # In ra tất cả các route đang có
-        print("Danh sách route hiện tại:")
-        for rule in app.url_map.iter_rules():
-            print(f"{rule} -> {rule.endpoint} (methods: {','.join(rule.methods)})")
-
-        # Kiểm tra nhanh /admin/
-        admin_routes = [rule for rule in app.url_map.iter_rules() if "/admin" in rule.rule]
-        if admin_routes:
-            print("\nCác route liên quan đến /admin/:")
-            for r in admin_routes:
-                print(f"{r} -> {r.endpoint}")
-        else:
-            print("\nChưa có route /admin/ nào được đăng ký!")
-
         app.run(debug=False)
