@@ -1,93 +1,49 @@
-{% extends 'admin/master.html' %}
-{% block body %}
-<h2>Dashboard thống kê ApplyGO</h2>
 
-<form method="get" class="mb-3">
-    <label for="months">Thời gian:</label>
-    <select name="months" id="months">
-        <option value="3" {% if months == 3 %}selected{% endif %}>3 tháng</option>
-        <option value="6" {% if months == 6 %}selected{% endif %}>6 tháng</option>
-        <option value="12" {% if months == 12 %}selected{% endif %}>12 tháng</option>
-        <option value="0" {% if months == 0 %}selected{% endif %}>Tất cả</option>
-    </select>
+{% extends 'layout/base.html' %}
 
-    <label for="location">Địa điểm:</label>
-    <select name="location" id="location">
-        <option value="all">Tất cả</option>
-        {% for loc in all_locations %}
-        <option value="{{ loc }}" {% if loc == location_filter %}selected{% endif %}>{{ loc }}</option>
-        {% endfor %}
-    </select>
+{% block title %}Đăng ký{% endblock %}
 
-    <button type="submit">Lọc</button>
+{% block content %}
+<h1 class="text-center text-info mt-1">ĐĂNG KÝ NGƯỜI DÙNG</h1>
+
+<form method="post" action="/register" enctype="multipart/form-data">
+    <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="full_name" placeholder="Họ và tên" name="name" required>
+        <label for="full_name">Họ và tên</label>
+    </div>
+
+    <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="username" placeholder="Tên đăng nhập" name="username" required>
+        <label for="username">Tên đăng nhập</label>
+    </div>
+
+    <div class="form-floating mb-3 mt-3">
+        <input type="email" class="form-control" id="email" placeholder="Email" name="email" required>
+        <label for="email">Email</label>
+    </div>
+
+    <div class="form-floating mb-3 mt-3">
+        <input type="text" class="form-control" id="phone" placeholder="Số điện thoại" name="phone" required>
+        <label for="phone">Số điện thoại</label>
+    </div>
+
+    <div class="form-floating mb-3 mt-3">
+        <input type="password" class="form-control" id="password" placeholder="Mật khẩu" name="password" required>
+        <label for="password">Mật khẩu</label>
+    </div>
+
+    <div class="form-floating mb-3 mt-3">
+        <input type="password" class="form-control" id="confirm" placeholder="Xác nhận mật khẩu" name="confirm" required>
+        <label for="confirm">Xác nhận mật khẩu</label>
+    </div>
+
+    <div class="text-center mt-3">
+        <button class="btn btn-success" type="submit">Đăng ký</button>
+    </div>
 </form>
 
-<!-- Line chart: ứng tuyển theo trạng thái từng tháng -->
-<h3>Ứng tuyển theo trạng thái từng tháng</h3>
-<canvas id="lineChart" width="800" height="400"></canvas>
+{% if err_msg %}
+<div class="alert alert-danger mt-2">{{ err_msg }}</div>
+{% endif %}
 
-<!-- Stacked bar chart: tất cả công ty -->
-<h3>So sánh ứng tuyển giữa các công ty</h3>
-<canvas id="allCompaniesChart" width="800" height="400"></canvas>
-
-<!-- Doughnut chart: tỷ lệ hồ sơ theo trạng thái -->
-<h3>Tỷ lệ hồ sơ theo trạng thái</h3>
-<canvas id="doughnutChart" width="400" height="400"></canvas>
-
-<!-- Bar chart: số tin tuyển dụng theo địa điểm -->
-<h3>Số tin tuyển dụng theo địa điểm</h3>
-<canvas id="locationChart" width="800" height="400"></canvas>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const labels = {{ labels|tojson }};
-const statusData = {{ status_data|tojson }};
-const companyStatusData = {{ company_status_data|tojson }};
-const locationLabels = {{ location_labels|tojson }};
-const locationValues = {{ location_values|tojson }};
-
-// --- Line chart ---
-const lineCtx = document.getElementById('lineChart').getContext('2d');
-new Chart(lineCtx, {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [
-            { label: 'Pending', data: statusData.Pending, borderColor: '#f39c12', fill: false },
-            { label: 'Accepted', data: statusData.Accepted, borderColor: '#00a65a', fill: false },
-            { label: 'Rejected', data: statusData.Rejected, borderColor: '#dd4b39', fill: false }
-        ]
-    },
-    options: { responsive: true }
-});
-
-// --- Stacked bar chart: tất cả công ty ---
-const companies = Object.keys(companyStatusData);
-const statuses = ['Pending','Accepted','Rejected'];
-const colors = ['#f39c12','#00a65a','#dd4b39'];
-const datasetsCompanies = statuses.map((status, idx) => ({
-    label: status,
-    data: companies.map(c => companyStatusData[c][status]),
-    backgroundColor: colors[idx]
-}));
-new Chart(document.getElementById('allCompaniesChart'), {
-    type: 'bar',
-    data: { labels: companies, datasets: datasetsCompanies },
-    options: { responsive: true, scales: { x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } } }
-});
-
-// --- Doughnut chart ---
-const totalStatus = statuses.map(s => companies.reduce((a,c)=>a+companyStatusData[c][s],0));
-new Chart(document.getElementById('doughnutChart'), {
-    type: 'doughnut',
-    data: { labels: statuses, datasets:[{ data: totalStatus, backgroundColor: colors }] }
-});
-
-// --- Bar chart: tin tuyển dụng theo địa điểm ---
-new Chart(document.getElementById('locationChart'), {
-    type: 'bar',
-    data: { labels: locationLabels, datasets:[{ label:'Số tin tuyển dụng', data: locationValues, backgroundColor:'#00c0ef' }] },
-    options: { responsive: true }
-});
-</script>
 {% endblock %}
