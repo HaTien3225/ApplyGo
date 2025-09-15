@@ -180,15 +180,15 @@ def edit_recruitment_post(id):
 def recruitment_post_detail(id):
     job = Job.query.get_or_404(id)
 
-    # lấy param từ query string
-    status = request.args.get("status")  # ví dụ: PENDING / ACCEPTED / REJECTED
+
+    status = request.args.get("status")
     try:
         page = int(request.args.get("page", 1))
         page_size = int(request.args.get("page_size", 10))
     except ValueError:
         page, page_size = 1, 10
 
-    # gọi hàm lấy application
+
     result = get_applications(job_id=id, status=status, page=page, page_size=page_size)
     applications = result["applications"]
     total_pages = result["total_pages"]
@@ -315,7 +315,7 @@ def application_detail(id):
     application = Application.query.get_or_404(id)
     profile = application.candidate_profile
 
-    # lấy template CV
+
     template_name = profile.cv_template or 'simple'
     template_path = f'company/cv_templates/{template_name}.html'
 
