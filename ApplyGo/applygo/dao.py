@@ -97,7 +97,7 @@ def apply_job(user_id: int, job_id: int):
     application = Application(
         candidate_profile_id=candidate_profile_id,
         job_id=job_id,
-        status=ApplicationStatus.PENDING,
+        status=ApplicationStatus.PENDING.value,
         applied_at=datetime.utcnow()
     )
     db.session.add(application)
@@ -139,6 +139,27 @@ def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_
 
     return jobs, total
 
+def get_applications(job_id: int, status: str = None, page: int = 1, page_size: int = 10):
+    query = Application.query.filter_by(job_id=job_id)
+
+    if status:
+        query = query.filter(Application.status == status)
+
+    total_records = query.count()
+
+    total_pages = (total_records + page_size - 1) // page_size if total_records > 0 else 1
+
+    applications = (
+        query.order_by(Application.applied_at.desc())
+             .offset((page - 1) * page_size)
+             .limit(page_size)
+             .all()
+    )
+
+    return {
+        "total_pages": total_pages,
+        "applications": applications
+    }
 
 def get_job_statistics():
     return db.session.query(

@@ -17,9 +17,9 @@
       <span class="badge bg-info">{{ job.status }}</span>
 
       <div class="d-grid mt-3">
-        <a href="#" class="btn btn-success">
-          <i class="bi bi-send"></i> Ứng tuyển ngay
-        </a>
+         <form method="POST" action="{{ url_for('apply_job', job_id=job.id) }}">
+        <button type="submit" class="btn btn-primary">Ứng tuyển ngay</button>
+    </form>
       </div>
     </div>
 
