@@ -17,13 +17,22 @@
                             <label class="form-label">Ảnh đại diện</label>
                             <input type="file" name="image" class="form-control mb-2">
                             {% if profile.user.image_url %}
-                            <img src="{{ profile.user.image_url }}" alt="avatar" class="img-fluid rounded-circle mt-2" style="max-height:120px;">
+                            <img src="{{ url_for('static', filename='Image/avatars/' ~ profile.user.image_url) }}"
+                                 alt="avatar"
+                                 class="img-fluid rounded-circle mt-2"
+                                 style="max-height:120px;">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='Image/avatars/default.png') }}"
+                                 alt="default avatar"
+                                 class="img-fluid rounded-circle mt-2"
+                                 style="max-height:120px;">
                             {% endif %}
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
+                            <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}"
+                                   required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Số điện thoại</label>
@@ -35,7 +44,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Kinh nghiệm</label>
-                            <textarea name="experience" class="form-control" rows="3">{{ profile.experience }}</textarea>
+                            <textarea name="experience" class="form-control"
+                                      rows="3">{{ profile.experience }}</textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Học vấn</label>
@@ -55,18 +65,22 @@
                     <form id="filterForm" method="GET" class="d-flex align-items-center">
                         <label class="me-2 text-white mb-0">Khoảng thời gian:</label>
                         <select name="months" class="form-select form-select-sm me-3" onchange="this.form.submit()">
-                            <option value="3" {% if months == 3 %}selected{% endif %}>3 tháng</option>
-                            <option value="6" {% if months == 6 %}selected{% endif %}>6 tháng</option>
-                            <option value="12" {% if months == 12 %}selected{% endif %}>12 tháng</option>
-                            <option value="0" {% if months == 0 %}selected{% endif %}>Tất cả</option>
+                            <option value="3" {% if months== 3 %}selected{% endif %}>3 tháng</option>
+                            <option value="6" {% if months== 6 %}selected{% endif %}>6 tháng</option>
+                            <option value="12" {% if months== 12 %}selected{% endif %}>12 tháng</option>
+                            <option value="0" {% if months== 0 %}selected{% endif %}>Tất cả</option>
                         </select>
 
                         <label class="me-2 text-white mb-0">Trạng thái:</label>
                         <select name="status_filter" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Tất cả</option>
-                            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="Accepted" {% if status_filter == 'Accepted' %}selected{% endif %}>Accepted</option>
-                            <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="all" {% if status_filter==
+                            'all' %}selected{% endif %}>Tất cả</option>
+                            <option value="Pending" {% if status_filter==
+                            'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Accepted" {% if status_filter==
+                            'Accepted' %}selected{% endif %}>Accepted</option>
+                            <option value="Rejected" {% if status_filter==
+                            'Rejected' %}selected{% endif %}>Rejected</option>
                         </select>
                     </form>
                 </div>
