@@ -4,9 +4,10 @@ from flask import render_template, request, redirect, url_for, flash, send_from_
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy import extract
 from applygo import app, db, dao, login
-from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary
+from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications
 from applygo.decorators import loggedin, role_required
-from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category
+from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category, \
+    ApplicationStatus
 import os
 import math
 
@@ -122,7 +123,7 @@ def edit_recruitment_post(id):
     salary = request.form.get('salary', '').strip()
     description = request.form.get('description', '').strip()
     location = request.form.get('location', '').strip()
-
+    status = request.form.get('status', '').strip()
     def clean_html(text):
         return BeautifulSoup(text, "html.parser").get_text()
 
@@ -158,10 +159,15 @@ def edit_recruitment_post(id):
         flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
         return redirect(url_for('edit_recruitment_post', id=id))
 
+    if status not in ["Open", "Closed", "Paused"]:
+        flash("Trạng thái không hợp lệ", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+
     job.title = title
     job.salary = salary
     job.description = description
     job.location = location
+    job.status = status
     db.session.commit()
 
     flash("Cập nhật tin tuyển dụng thành công!", "success")
@@ -173,7 +179,28 @@ def edit_recruitment_post(id):
 @role_required(UserRole.COMPANY.value)
 def recruitment_post_detail(id):
     job = Job.query.get_or_404(id)
-    return render_template('company/edit_recruitment_post.html', job=job)
+
+
+    status = request.args.get("status")
+    try:
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 10))
+    except ValueError:
+        page, page_size = 1, 10
+
+
+    result = get_applications(job_id=id, status=status, page=page, page_size=page_size)
+    applications = result["applications"]
+    total_pages = result["total_pages"]
+
+    return render_template(
+        'company/edit_recruitment_post.html',
+        job=job,
+        applications=applications,
+        total_pages=total_pages,
+        current_page=page,
+        current_status=status
+    )
 
 
 @app.route('/recruitment-post-manager/<int:id>/delete/', methods=['POST'])
@@ -211,15 +238,15 @@ def recruitment_post_manager():
         sort_by = True
     Jstatus = None
     if status == "OPEN":
-        Jstatus = JobStatus.OPEN
+        Jstatus = JobStatus.OPEN.value
     if status == "CLOSED":
-        Jstatus = JobStatus.CLOSED
+        Jstatus = JobStatus.CLOSED.value
     if status == "PAUSED":
-        Jstatus = JobStatus.PAUSED
+        Jstatus = JobStatus.PAUSED.value
 
     jobs, total = get_jobs_by_company(company_id=company.id, sort_by_date_incr=sort_by, page_size=12, page=page, kw=kw,
                                       status=Jstatus)
-    print(total_jobs)
+    print(jobs)
     return render_template('company/recruitment_post_manager.html', company_jobs=jobs, page=page)
 
 
@@ -281,6 +308,39 @@ def create_recruitment_post():
         return redirect(url_for('recruitment_post_manager'))
     return render_template('company/create_recruitment_post.html')
 
+@app.route('/application/<int:id>/detail', methods=['GET'])
+@login_required
+@role_required(UserRole.COMPANY.value)
+def application_detail(id):
+    application = Application.query.get_or_404(id)
+    profile = application.candidate_profile
+
+
+    template_name = profile.cv_template or 'simple'
+    template_path = f'company/cv_templates/{template_name}.html'
+
+    return render_template(template_path, profile=profile, application=application)
+
+
+@app.route('/application/<int:id>/update-status', methods=['POST'])
+@login_required
+@role_required(UserRole.COMPANY.value)
+def update_application_status(id):
+    application = Application.query.get_or_404(id)
+
+    new_status = request.form.get('status')
+    if new_status not in ['Accepted', 'Rejected']:
+        flash("Trạng thái không hợp lệ!", "danger")
+        return redirect(request.referrer or url_for('index'))
+
+    application.status = new_status
+    application.updated_at = datetime.now()
+    db.session.commit()
+
+    flash(f"Đã cập nhật trạng thái thành {new_status}", "success")
+    return redirect(request.referrer or url_for('recruitment_post_detail', id=application.job_id))
+
+
 
 @app.route('/jobs/<int:job_id>/')
 def job_detail(job_id):
@@ -299,6 +359,7 @@ def job_detail(job_id):
 
 @app.route('/apply/<int:job_id>/', methods=['POST'])
 @login_required
+@role_required(UserRole.CANDIDATE.value)
 def apply_job(job_id):
     try:
         dao.apply_job(user_id=current_user.id, job_id=job_id)
