@@ -1,7 +1,7 @@
 import hashlib
 import os
 from datetime import datetime
-from pipes import quote
+import shlex
 import cloudinary
 from flask_sqlalchemy.query import Query
 from applygo import app, db
@@ -180,3 +180,23 @@ def upload_file_to_cloudinary(file, folder="applygo/other_files"):
         unique_filename=False,
     )
     return res.get("secure_url")
+
+def get_my_applications(candidate_id):
+    apps = (
+        db.session.query(Application.id, Job.title, Company.name, Application.status, Application.applied_at)
+        .join(Job, Application.job_id == Job.id)
+        .join(Company, Job.company_id == Company.id)
+        .filter(Application.candidate_profile_id == candidate_id)
+        .all()
+    )
+    # convert to dict
+    return [
+        {
+            "id": a.id,
+            "job_title": a.title,
+            "company_name": a.name,
+            "status": a.status,
+            "applied_at": a.applied_at,
+        }
+        for a in apps
+    ]

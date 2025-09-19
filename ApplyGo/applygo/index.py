@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta
+from os import abort
+
 from bs4 import BeautifulSoup
-from flask import render_template, request, redirect, url_for, flash, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy import extract
 from applygo import app, db, dao, login
-from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications
+from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications, get_my_applications
 from applygo.decorators import loggedin, role_required
 from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category, \
     ApplicationStatus
+
+
 import os
 import math
 
@@ -792,6 +796,27 @@ def jobs():
         category_id=category_id
     )
 
+
+@app.route("/applications/my", methods=["GET"])
+@login_required
+def my_applications():
+    if current_user.role.lower() != "candidate":
+        return "Only candidates can view applications", 403
+
+    apps = get_my_applications(current_user.candidate_profile.id)
+    return render_template("candidate/my_applications.html", applications=apps)
+
+
+@app.route("/candidate/applications/<int:app_id>")
+@login_required
+def candidate_application_detail(app_id):
+    app_obj = Application.query.get_or_404(app_id)
+
+    # chỉ cho phép đúng candidate xem
+    if app_obj.candidate_profile.user_id != current_user.id:
+        abort(403)
+
+    return render_template("candidate/application_detail.html", application=app_obj)
 
 if __name__ == "__main__":
     with app.app_context():

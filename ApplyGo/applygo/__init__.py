@@ -16,7 +16,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.secret_key = os.getenv("SECRET_KEY", "fallback-secret")
 
 db_user = os.getenv("DB_USER", "root")
-db_pass = quote(os.getenv("DB_PASSWORD", ""))
+db_pass = quote(os.getenv("DB_PASSWORD", "Admin@123"))
 db_host = os.getenv("DB_HOST", "localhost")
 db_name = os.getenv("DB_NAME", "applygo")
 
