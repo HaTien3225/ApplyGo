@@ -42,8 +42,16 @@
                         <div class="mb-3 text-center">
                             <label class="form-label">Logo công ty</label>
                             <input type="file" name="logo" class="form-control mb-2">
-                            {% if company.logo_url %}
-                            <img src="{{ company.logo_url }}" alt="logo" class="img-fluid rounded mt-2" style="max-height:120px;">
+                                      {% if company.logo_url %}
+                                <img src="{{ url_for('static', filename='Image/logos/' ~ company.logo_url) }}"
+                                     alt="avatar"
+                                     class="img-fluid rounded-circle mt-2"
+                                     style="max-height:120px;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='Image/logos/default.png') }}"
+                                     alt="default avatar"
+                                     class="img-fluid rounded-circle mt-2"
+                                     style="max-height:120px;">
                             {% endif %}
                         </div>
                         <div class="mb-3">

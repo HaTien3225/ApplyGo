@@ -24,7 +24,8 @@ def seed_data():
             username="admin",
             email="admin@example.com",
             password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-            role=UserRole.ADMIN.value
+            role=UserRole.ADMIN.value,
+            image_url="admin.png"
         )
         db.session.add(admin)
         db.session.commit()
@@ -43,14 +44,28 @@ def seed_data():
 
         # --- CV Templates ---
         templates = [
-            CvTemplate(name="Simple", html_file="simple", preview_image="Image/cv_previews/simple.png"),
-            CvTemplate(name="Modern", html_file="modern", preview_image="Image/cv_previews/modern.png"),
-            CvTemplate(name="Professional", html_file="professional",
-                       preview_image="Image/cv_previews/professional.png")
+            CvTemplate(name="Simple", html_file="simple", preview_image="simple.png"),
+            CvTemplate(name="Modern", html_file="modern", preview_image="modern.png"),
+            CvTemplate(name="Professional", html_file="professional", preview_image="professional.png")
         ]
         db.session.add_all(templates)
         db.session.commit()
         print("✅ CV Templates created")
+
+        # --- Ảnh mẫu ---
+        user_images = [
+            "avatar1.png",
+            "avatar2.png",
+            "avatar3.png",
+            "avatar4.png",
+        ]
+
+        company_logos = [
+            "logo1.png",
+            "logo2.png",
+            "logo3.png",
+            "logo4.png",
+        ]
 
         # --- 20 Candidates ---
         skills_list = [
@@ -73,7 +88,8 @@ def seed_data():
                 username=f"user{i}",
                 email=f"user{i}@example.com",
                 password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-                role=UserRole.CANDIDATE.value
+                role=UserRole.CANDIDATE.value,
+                image_url=random.choice(user_images)  # avatar
             )
             db.session.add(user)
             db.session.commit()
@@ -100,7 +116,8 @@ def seed_data():
                 username=f"company{i}",
                 email=f"company{i}@example.com",
                 password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
-                role=UserRole.COMPANY.value
+                role=UserRole.COMPANY.value,
+                image_url=random.choice(company_logos)  # ảnh user của công ty
             )
             db.session.add(user)
             db.session.commit()
@@ -112,6 +129,7 @@ def seed_data():
                 mst=''.join(random.choices(string.digits, k=10)),
                 address=f"{i*10} Nguyen Trai, Hanoi",
                 website=f"www.company{i}.com",
+                logo_url=random.choice(company_logos)  # logo công ty
             )
             db.session.add(company)
             db.session.commit()
