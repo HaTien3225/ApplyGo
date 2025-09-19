@@ -1,0 +1,72 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Đơn ứng tuyển của tôi{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center fw-bold mb-4 text-primary">
+        <i class="bi bi-briefcase-fill me-2"></i>Danh sách ứng tuyển của bạn
+    </h2>
+
+    {% if applications %}
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr class="text-center">
+                        <th class="text-start ps-4">Công việc</th>
+                        <th>Công ty</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày nộp</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="text-start ps-4">
+                            <i class="bi bi-clipboard-check text-primary me-2"></i>
+                            <span class="fw-semibold">{{ app.job_title }}</span>
+                        </td>
+                        <td>
+                            <i class="bi bi-building text-secondary me-1"></i>
+                            {{ app.company_name }}
+                        </td>
+                        <td>
+                            {% if app.status == "Accepted" %}
+                            <span class="badge bg-success px-3 py-2">✔ {{ app.status }}</span>
+                            {% elif app.status == "Rejected" %}
+                            <span class="badge bg-danger px-3 py-2">✘ {{ app.status }}</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark px-3 py-2">⏳ {{ app.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ app.applied_at }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('candidate_application_detail', app_id=app.id) }}"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> Xem chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center shadow-sm p-4 rounded-3">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Bạn chưa ứng tuyển công việc nào.
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="/jobs" class="btn btn-primary btn-lg shadow-sm">
+            <i class="bi bi-search me-2"></i>Quay lại danh sách việc làm
+        </a>
+    </div>
+</div>
+{% endblock %}

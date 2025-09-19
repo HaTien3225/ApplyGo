@@ -1,0 +1,153 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Trang chủ - ApplyGO{% endblock %}
+
+{% block content %}
+
+<!-- Section ứng viên -->
+<div class="my-5 mx-auto" style="width: 90%;">
+    <div class="p-4 bg-white shadow-sm rounded-3">
+        <h4 class="mb-4">Ứng viên đã ứng tuyển</h4>
+        {% set status_classes = {
+        'Pending': 'badge bg-warning text-dark',
+        'Accepted': 'badge bg-success',
+        'Rejected': 'badge bg-danger',
+        } %}
+
+        <!-- Filter theo status -->
+        <form method="GET" action="{{ url_for('recruitment_post_detail', id=job.id) }}" class="mb-4">
+            <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="status" value=""
+                           id="status_all" {% if not current_status %}checked{% endif %}>
+                    <label class="form-check-label" for="status_all">Tất cả</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="status" value="PENDING"
+                           id="status_pending" {% if current_status== 'Pending' %}checked{% endif %}>
+                    <label class="form-check-label" for="status_pending">Pending</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="status" value="ACCEPTED"
+                           id="status_accepted" {% if current_status== 'Accepted' %}checked{% endif %}>
+                    <label class="form-check-label" for="status_accepted">Accepted</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="status" value="REJECTED"
+                           id="status_rejected" {% if current_status== 'Rejected' %}checked{% endif %}>
+                    <label class="form-check-label" for="status_rejected">Rejected</label>
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-sm">Lọc</button>
+            </div>
+        </form>
+
+        {% if applications %}
+        <div class="row row-cols-1 row-cols-md-5 g-4">
+            {% for app in applications %}
+            <div class="col">
+                <div class="p-3 bg-light shadow-sm rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h6 class="mb-1">{{ app.candidate_profile.full_name }}</h6>
+                        <p class="small mb-1">
+                            Trạng thái:
+                            <span class="{{ status_classes.get(app.status, 'badge bg-secondary') }}">
+                        {{ app.status }}
+                    </span>
+                        </p>
+                        <p class="small mb-2 text-muted">
+                            Nộp: {{ app.applied_at.strftime('%d/%m/%Y %H:%M') }}
+                        </p>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('application_detail', id=app.id) }}"
+                           class="btn btn-sm btn-outline-primary w-100">
+                            Xem hồ sơ
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Phân trang -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == current_page %}active{% endif %}">
+                    <a class="page-link"
+                       href="{{ url_for('recruitment_post_detail', id=job.id, page=p, status=current_status) }}">
+                        {{ p }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% else %}
+        <p class="text-muted">Chưa có ứng viên nào ứng tuyển.</p>
+        {% endif %}
+    </div>
+
+    <div class="my-5 mx-auto" >
+        <div class="p-4 bg-white shadow-sm rounded-3">
+            <h3 class="mb-4">Tin tuyển dụng: {{ job.title }}</h3>
+
+            <!-- Nút bấm hiển thị form -->
+            <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#editForm" aria-expanded="false" aria-controls="editForm">
+                Chỉnh sửa tin tuyển dụng
+            </button>
+
+            <!-- Form chỉnh sửa ẩn -->
+            <div class="collapse" id="editForm">
+                <div class="card card-body">
+                    <form method="POST" action="{{ url_for('edit_recruitment_post', id=job.id) }}">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Tiêu đề</label>
+                            <input type="text" name="title" id="title" value="{{ job.title }}"
+                                   class="form-control" maxlength="200" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả công việc</label>
+                            <textarea name="description" id="description" rows="6"
+                                      class="form-control" maxlength="5000" required>{{ job.description }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="salary" class="form-label">Mức lương (VNĐ)</label>
+                            <input type="text" name="salary" id="salary" value="{{ job.salary }}"
+                                   class="form-control" min="0" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Địa điểm</label>
+                            <input type="text" name="location" id="location" value="{{ job.location }}"
+                                   class="form-control" maxlength="100" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select" required>
+                                <option value="Open" {{
+                                'selected' if job.status == 'Open' else '' }}>OPEN</option>
+                                <option value="Closed" {{
+                                'selected' if job.status == 'Closed' else '' }}>CLOSED</option>
+                                <option value="Paused" {{
+                                'selected' if job.status == 'Paused' else '' }}>PAUSED</option>
+                            </select>
+                        </div>
+
+                        <!-- Nút cập nhật + xóa -->
+                        <div class="d-flex justify-content-end mt-4 gap-2">
+                            <button type="submit" class="btn btn-primary px-4">Cập nhật</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_recruitment_post', id=job.id) }}"
+                          onsubmit="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này không?');">
+                        <button type="submit" class="btn btn-danger px-4">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

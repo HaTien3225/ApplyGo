@@ -6,102 +6,110 @@
 
 <!-- HERO SECTION -->
 <section class="hero-section d-flex align-items-center text-center text-white">
-  <div class="container">
-    <h1 class="fw-bold display-4">Công việc mơ ước trong tầm tay</h1>
-    <p class="lead mb-4">Hàng nghìn cơ hội việc làm từ các công ty hàng đầu Việt Nam</p>
+    <div class="container">
+        <h1 class="fw-bold display-4 mb-3">Công việc mơ ước trong tầm tay</h1>
+        <p class="lead mb-3">Hàng nghìn cơ hội việc làm từ các công ty hàng đầu Việt Nam</p>
 
-    <!-- FORM TÌM KIẾM -->
-    <form method="GET" action="{{ url_for('jobs') }}"
-          class="row g-2 justify-content-center bg-white p-3 rounded shadow-sm">
-      <div class="col-md-4">
-        <input type="text" name="keyword" class="form-control form-control-lg"
-               placeholder="Từ khóa: Lập trình viên, Kế toán...">
-      </div>
-      <div class="col-md-3">
-        <input type="text" name="location" class="form-control form-control-lg"
-               placeholder="Địa điểm: Hà Nội, TP.HCM...">
-      </div>
-      <div class="col-md-3">
-        <select class="form-select form-select-lg" name="category">
-          <option value="">Ngành nghề</option>
-          {% for c in categories %}
-          <option value="{{ c.id }}">{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-2 d-grid">
-        <button type="submit" class="btn btn-success btn-lg">Tìm kiếm</button>
-      </div>
-    </form>
-  </div>
+        <!-- FORM TÌM KIẾM -->
+        <form method="GET" action="{{ url_for('jobs') }}"
+              class="row g-2 justify-content-center bg-white p-3 rounded shadow-sm">
+            <div class="col-md-3">
+                <input type="text" name="kw" class="form-control form-control-lg"
+                       placeholder="Từ khóa: Lập trình viên, Kế toán..."
+                       value="{{ kw }}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="location" class="form-control form-control-lg"
+                       placeholder="Địa điểm: Hà Nội, TP.HCM..."
+                       value="{{ location }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category_id" class="form-select form-select-lg">
+                    <option value="">-- Chọn Nghề Nghiệp --</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {% if category_id== c.id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-success btn-lg">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
 </section>
 
 <!-- SLIDER BANNER -->
-<div class="container my-5">
-  <div id="jobCarousel" class="carousel slide shadow rounded overflow-hidden" data-bs-ride="carousel">
-    <div class="carousel-inner">
-      {% for ad in ad_images %}
-      <div class="carousel-item {% if loop.first %}active{% endif %}">
-        <img src="{{ ad.url }}" class="d-block w-100" alt="Banner tuyển dụng">
-      </div>
-      {% endfor %}
+<div class="container my-4">
+    <div id="jobCarousel" class="carousel slide shadow rounded overflow-hidden" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for ad in ad_images %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <img src="{{ ad.url }}" class="d-block w-100" alt="Banner tuyển dụng">
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#jobCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#jobCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#jobCarousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#jobCarousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon"></span>
-    </button>
-  </div>
 </div>
 
 <!-- VIDEO GIỚI THIỆU -->
-<div class="container my-5">
-  <div class="row align-items-center g-4">
-    <div class="col-lg-6">
-      <div class="ratio ratio-16x9 rounded shadow overflow-hidden">
-        <iframe src="https://www.youtube.com/embed/5Peo-ivmupE"
-                title="Giới thiệu ApplyGO" allowfullscreen></iframe>
-      </div>
+<div class="container my-4">
+    <div class="row align-items-center g-3">
+        <div class="col-lg-6">
+            <div class="ratio ratio-16x9 rounded shadow overflow-hidden">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/0ZGi6bbqXHg?si=-TVeoLeB_nUPOgAm" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <h2 class="fw-bold text-dark mb-3">Kết nối ứng viên & nhà tuyển dụng</h2>
+            <p class="text-muted mb-3">
+                ApplyGO giúp bạn dễ dàng tìm việc và tuyển dụng nhanh chóng hơn bao giờ hết.
+                Với hệ thống thông minh, ứng viên tiếp cận hàng ngàn công việc phù hợp,
+                còn nhà tuyển dụng dễ dàng tìm thấy ứng viên tiềm năng.
+            </p>
+            <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">Tham gia ngay</a>
+        </div>
     </div>
-    <div class="col-lg-6">
-      <h2 class="fw-bold text-dark">Kết nối ứng viên & nhà tuyển dụng</h2>
-      <p class="text-muted">ApplyGO giúp bạn dễ dàng tìm việc và tuyển dụng nhanh chóng hơn bao giờ hết.
-        Với hệ thống thông minh, ứng viên tiếp cận hàng ngàn công việc phù hợp, còn nhà tuyển dụng dễ dàng tìm thấy ứng viên tiềm năng.</p>
-      <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">Tham gia ngay</a>
-    </div>
-  </div>
 </div>
 
 <!-- VIỆC LÀM MỚI -->
-<div class="container my-5">
-  <h2 class="fw-bold mb-4 text-primary text-center">Việc làm mới nhất</h2>
-  <div class="row g-4">
-    {% for job in jobs %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow-sm h-100 hover-card border-0">
-        <div class="card-body">
-          <h5 class="card-title text-primary">{{ job.title }}</h5>
-          <p class="card-text text-muted mb-1"><i class="bi bi-building"></i> {{ job.company.name }}</p>
-          <p class="small text-secondary"><i class="bi bi-geo-alt"></i> {{ job.location or "Toàn quốc" }}</p>
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline-success btn-sm">Xem chi tiết</a>
-
-          </div>
+<div class="container my-4">
+    <h2 class="fw-bold mb-4 text-primary text-center">Việc làm mới nhất</h2>
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 hover-card border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ job.title }}</h5>
+                    <p class="card-text text-muted mb-1"><i class="bi bi-building"></i> {{ job.company.name }}</p>
+                    <p class="small text-secondary"><i class="bi bi-geo-alt"></i> {{ job.location or "Toàn quốc" }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
+                            Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-  </div>
 </div>
 
 <!-- CTA SECTION -->
-<section class="cta-section text-center py-5">
-  <div class="container">
-    <h2 class="fw-bold mb-3">Bắt đầu hành trình nghề nghiệp của bạn</h2>
-    <p class="mb-4">Tham gia ApplyGO ngay hôm nay để khám phá hàng ngàn công việc phù hợp</p>
-    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg shadow-sm">Đăng ký miễn phí</a>
-  </div>
+<section class="cta-section text-center py-4">
+    <div class="container">
+        <h2 class="fw-bold mb-2">Bắt đầu hành trình nghề nghiệp của bạn</h2>
+        <p class="mb-3">Tham gia ApplyGO ngay hôm nay để khám phá hàng ngàn công việc phù hợp</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg shadow-sm">Đăng ký miễn phí</a>
+    </div>
 </section>
 
 {% endblock %}

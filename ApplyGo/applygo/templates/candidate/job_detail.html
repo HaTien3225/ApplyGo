@@ -1,0 +1,78 @@
+{% extends "layout/base.html" %}
+{% block title %}{{ job.title }} - Chi tiết việc làm{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <!-- Thông tin chính -->
+    <div class="col-md-4 text-center">
+      <img src="{{ job.company.logo or url_for('static', filename='images/default-company.png') }}"
+           class="img-fluid rounded mb-3"
+           style="max-height: 150px; object-fit: contain;" alt="Company Logo">
+
+      <h3 class="text-primary">{{ job.title }}</h3>
+      <p><i class="bi bi-building"></i> {{ job.company.name }}</p>
+      <p><i class="bi bi-geo-alt"></i> {{ job.location or 'Toàn quốc' }}</p>
+      <p><i class="bi bi-cash"></i> Mức lương: <strong>{{ job.salary }}</strong></p>
+      <span class="badge bg-info">{{ job.status }}</span>
+
+      <div class="d-grid mt-3">
+         <form method="POST" action="{{ url_for('apply_job', job_id=job.id) }}">
+        <button type="submit" class="btn btn-primary">Ứng tuyển ngay</button>
+    </form>
+      </div>
+    </div>
+
+    <!-- Nội dung mô tả -->
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-primary">Mô tả công việc</h5>
+          <p>{{ job.description | safe }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-primary">Yêu cầu</h5>
+          <p>{{ job.requirements | safe }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold text-primary">Thông tin công ty</h5>
+          <p><strong>Tên công ty:</strong> {{ job.company.name }}</p>
+          <p><strong>Địa chỉ:</strong> {{ job.company.address }}</p>
+          <p><strong>Email:</strong> {{ job.company.user.email }}</p>
+          <p><strong>Số điện thoại:</strong> {{ job.company.phone }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Việc làm tương tự -->
+  {% if similar_jobs %}
+  <div class="row mt-5">
+    <h4 class="fw-bold text-primary mb-3">Việc làm tương tự</h4>
+    {% for j in similar_jobs %}
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="card-title">
+            <a href="{{ url_for('job_detail', job_id=j.id) }}" class="text-decoration-none text-dark">
+              {{ j.title }}
+            </a>
+          </h6>
+          <p class="mb-1"><i class="bi bi-building"></i> {{ j.company.name }}</p>
+          <p class="mb-1"><i class="bi bi-geo-alt"></i> {{ j.location }}</p>
+          <p class="mb-1"><i class="bi bi-cash"></i> {{ j.salary }}</p>
+          <span class="badge bg-secondary">{{ j.status }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

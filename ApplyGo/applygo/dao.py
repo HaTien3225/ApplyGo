@@ -1,20 +1,18 @@
 import hashlib
+import os
 from datetime import datetime
+import shlex
+import cloudinary
+from flask_sqlalchemy.query import Query
 from applygo import app, db
-from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus
+from applygo.models import User, CandidateProfile, Company, Job, Application, ApplicationStatus, Category
 
-
-# ------------------------
-# AUTH & USER
-# ------------------------
 
 def hash_password(password: str) -> str:
-    """Mã hóa mật khẩu bằng MD5 (tạm, có thể nâng cấp sang bcrypt sau)"""
     return hashlib.md5(password.strip().encode("utf-8")).hexdigest()
 
 
 def auth_user(username: str, password: str):
-    """Xác thực user khi login"""
     hashed = hash_password(password)
     return User.query.filter_by(
         username=username.strip(),
@@ -27,27 +25,23 @@ def get_user_by_id(user_id: int):
 
 
 def get_user_role(user: User):
-    """Trả về role của user: candidate / company / admin"""
     if not user:
         return None
     return user.role.lower()
 
 
-def create_user(name, username, password, email, phone, role="candidate"):
-    """Đăng ký user mới (ứng viên mặc định)"""
+def create_user(name, username, password, email, role="candidate"):
     hashed_password = hash_password(password)
 
     user = User(
         username=username.strip(),
         password=hashed_password,
         email=email.strip(),
-        phone=phone.strip(),
         role=role.lower()
     )
     db.session.add(user)
-    db.session.flush()  # để có user.id ngay
+    db.session.flush()
 
-    # Tạo profile hoặc công ty tương ứng
     if role.lower() == "candidate":
         profile = CandidateProfile(user_id=user.id, full_name=name.strip())
         db.session.add(profile)
@@ -58,10 +52,6 @@ def create_user(name, username, password, email, phone, role="candidate"):
     db.session.commit()
     return user
 
-
-# ------------------------
-# JOB & COMPANY
-# ------------------------
 
 def get_all_jobs():
     return Job.query.order_by(Job.created_at.desc()).all()
@@ -83,24 +73,20 @@ def search_jobs(keyword=None, company_id=None):
 def get_companies():
     return Company.query.all()
 
+def get_categories():
+    return Category.query.all()
 
 def get_company_by_id(company_id: int):
     return Company.query.get(company_id)
 
 
-# ------------------------
-# APPLICATION
-# ------------------------
-
 def apply_job(user_id: int, job_id: int):
-    """Ứng viên nộp đơn ứng tuyển"""
     user = User.query.get(user_id)
     if not user or not user.candidate_profile:
         raise ValueError("Chỉ ứng viên mới có thể ứng tuyển!")
 
     candidate_profile_id = user.candidate_profile.id
 
-    # Kiểm tra ứng tuyển trùng
     existing = Application.query.filter_by(
         candidate_profile_id=candidate_profile_id,
         job_id=job_id
@@ -111,7 +97,7 @@ def apply_job(user_id: int, job_id: int):
     application = Application(
         candidate_profile_id=candidate_profile_id,
         job_id=job_id,
-        status=ApplicationStatus.PENDING,
+        status=ApplicationStatus.PENDING.value,
         applied_at=datetime.utcnow()
     )
     db.session.add(application)
@@ -129,26 +115,88 @@ def get_applications_by_user(user_id: int):
 
 
 def get_applications_by_company(company_id: int):
-    return Application.query.join(Job).filter(Job.company_id == company_id).order_by(Application.applied_at.desc()).all()
+    return Application.query.join(Job).filter(Job.company_id == company_id).order_by(
+        Application.applied_at.desc()).all()
 
 
-# ------------------------
-# ADMIN / REPORT
-# ------------------------
+def get_jobs_by_company(company_id, page=1, page_size=10, kw=None, sort_by_date_incr=False, status=None):
+    query: Query = Job.query.filter(Job.company_id == company_id)
+
+    if status is not None:
+        query = query.filter(Job.status == status)
+
+    if kw:
+        query = query.filter(Job.title.ilike(f"%{kw}%"))
+
+    if sort_by_date_incr:
+        query = query.order_by(Job.created_at.asc())
+    else:
+        query = query.order_by(Job.created_at.desc())
+
+    total = query.count()
+
+    jobs = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    return jobs, total
+
+def get_applications(job_id: int, status: str = None, page: int = 1, page_size: int = 10):
+    query = Application.query.filter_by(job_id=job_id)
+
+    if status:
+        query = query.filter(Application.status == status)
+
+    total_records = query.count()
+
+    total_pages = (total_records + page_size - 1) // page_size if total_records > 0 else 1
+
+    applications = (
+        query.order_by(Application.applied_at.desc())
+             .offset((page - 1) * page_size)
+             .limit(page_size)
+             .all()
+    )
+
+    return {
+        "total_pages": total_pages,
+        "applications": applications
+    }
 
 def get_job_statistics():
-    """Thống kê số lượng ứng tuyển theo công việc"""
     return db.session.query(
         Job.title,
         db.func.count(Application.id).label("applications")
-    ).join(Application, Application.job_id == Job.id, isouter=True)\
-     .group_by(Job.id).all()
+    ).join(Application, Application.job_id == Job.id, isouter=True) \
+        .group_by(Job.id).all()
 
 
-# ------------------------
-# TEST DAO
-# ------------------------
-if __name__ == "__main__":
-    with app.app_context():
-        print("Jobs:", get_all_jobs())
-        print("Companies:", get_companies())
+def upload_file_to_cloudinary(file, folder="applygo/other_files"):
+    if not file:
+        raise ValueError("No file to upload")
+    res = cloudinary.uploader.upload(
+        file,
+        folder=folder,
+        resource_type="auto",
+        use_filename=True,
+        unique_filename=False,
+    )
+    return res.get("secure_url")
+
+def get_my_applications(candidate_id):
+    apps = (
+        db.session.query(Application.id, Job.title, Company.name, Application.status, Application.applied_at)
+        .join(Job, Application.job_id == Job.id)
+        .join(Company, Job.company_id == Company.id)
+        .filter(Application.candidate_profile_id == candidate_id)
+        .all()
+    )
+    # convert to dict
+    return [
+        {
+            "id": a.id,
+            "job_title": a.title,
+            "company_name": a.name,
+            "status": a.status,
+            "applied_at": a.applied_at,
+        }
+        for a in apps
+    ]

@@ -1,0 +1,141 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Danh sách việc làm</h2>
+
+    <!-- Form lọc -->
+    <form method="get" class="row g-3 mb-4 align-items-end shadow-sm p-3 rounded bg-light">
+        <!-- Từ khóa -->
+        <div class="col-md-3">
+            <label class="form-label">Từ khóa</label>
+            <input type="text" name="kw" value="{{ kw or '' }}" class="form-control" placeholder="Tìm theo tiêu đề...">
+        </div>
+
+        <!-- Công ty -->
+        <div class="col-md-3">
+            <label class="form-label">Công ty</label>
+            <select name="company_id" class="form-select">
+                <option value="">-- Chọn công ty --</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}" {% if company_id== c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Nghề Nghiệp</label>
+            <select name="category_id" class="form-select">
+                <option value="">-- Chọn Nghề Nghiệp --</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {% if category_id== c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Trạng thái -->
+        <div class="col-md-2">
+            <label class="form-label">Trạng thái</label>
+            <select name="status" class="form-select">
+                <option value="">-- Tất cả --</option>
+                <option value="OPEN" {% if status==
+                'OPEN' %}selected{% endif %}>OPEN</option>
+                <option value="CLOSED" {% if status==
+                'CLOSED' %}selected{% endif %}>CLOSED</option>
+                <option value="PAUSED" {% if status==
+                'PAUSED' %}selected{% endif %}>PAUSED</option>
+            </select>
+        </div>
+
+        <!-- Khoảng lương -->
+        <div class="col-md-2">
+            <label class="form-label">Mức lương</label>
+            <select name="salary_range" class="form-select">
+                <option value="">-- Tất cả --</option>
+                <option value="0-500">Dưới 500$</option>
+                <option value="500-1000">500$ - 1000$</option>
+                <option value="1000-2000">1000$ - 2000$</option>
+                <option value="2000-999999">Trên 2000$</option>
+            </select>
+        </div>
+
+        <!-- Địa điểm -->
+        <div class="col-md-2">
+            <label class="form-label">Địa điểm</label>
+            <input type="text" name="location" value="{{ location or '' }}" class="form-control"
+                   placeholder="VD: Hà Nội">
+        </div>
+
+        <!-- Ngày đăng -->
+        <div class="col-md-2">
+            <label class="form-label">Ngày đăng</label>
+            <select name="posted" class="form-select">
+                <option value="">-- Bất kỳ --</option>
+                <option value="7" {% if posted==
+                '7' %}selected{% endif %}>7 ngày qua</option>
+                <option value="30" {% if posted==
+                '30' %}selected{% endif %}>30 ngày qua</option>
+            </select>
+        </div>
+
+        <!-- Nút lọc -->
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-filter"></i> Lọc
+            </button>
+        </div>
+    </form>
+
+    <!-- Danh sách job -->
+    <div class="row">
+        {% for job in jobs %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 job-card">
+                <div class="text-center mt-3">
+                    <img src="{% if job.company.logo_url %}
+             {{ url_for('static', filename='Image/logos/' ~ job.company.logo_url) }}
+         {% else %}
+             {{ url_for('static', filename='Image/logos/default-logo.png') }}
+         {% endif %}"
+                         class="img-fluid rounded"
+                         style="max-height: 80px; object-fit: contain;"
+                         alt="Company Logo">
+
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-primary mb-2 text-center">{{ job.title }}</h5>
+                    <p class="card-text mb-1"><i class="bi bi-cash"></i> <strong>Lương:</strong> {{ job.salary }}</p>
+                    <p class="card-text mb-1"><i class="bi bi-cash"></i> <strong>Nghề Nghiệp:</strong> {{
+                        job.category.name }}</p>
+                    <p class="card-text mb-1"><i class="bi bi-geo-alt"></i> <strong>Địa điểm:</strong> {{ job.location
+                        }}</p>
+                    <p class="card-text mb-2"><i class="bi bi-building"></i> <strong>Công ty:</strong> {{
+                        job.company.name }}</p>
+                    <p class="card-text mb-2"><i class="bi bi-building"></i> <strong>Ngày Đăng:</strong> {{
+                        job.created_at }}</p>
+                    <span class="badge bg-info align-self-start mb-3">{{ job.status }}</span>
+                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline-primary mt-auto">
+                        <i class="bi bi-eye"></i> Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-center">Không có công việc nào phù hợp.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Phân trang -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for p in range(1, (total // page_size) + 2) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('jobs', page=p, kw=kw, company_id=company_id, status=status,
+                              salary_range=salary_range, location=location, posted=posted) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

@@ -60,7 +60,7 @@
         </ul>
 
         <!-- Nút Tạo mới -->
-        <a href="/tao-moi" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
+        <a href="/recruitment-post/create" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
     </form>
 
     <!-- Content -->
@@ -75,12 +75,20 @@
                             <h5 class="card-title text-primary">{{ company_job.title }}</h5>
                             <p class="small text-secondary">
                                 <i class="bi bi-geo-alt"></i> {{ company_job.location or "Toàn quốc" }}
-                            </p>
+                                </p>
+                            {% if company_job.status == "Open" %}
+                            <span class="badge bg-success">OPEN</span>
+                            {% elif company_job.status == "Paused" %}
+                            <span class="badge bg-warning text-dark">PAUSED</span>
+                            {% elif company_job.status == "Closed" %}
+                            <span class="badge bg-danger">CLOSED</span>
+                            {% endif %}
                             <p class="small text-secondary">
                                 <i class="bi bi-clock"></i> Đăng vào : {{ company_job.created_at }}
                             </p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <a href="" class="btn btn-outline-success btn-sm">Quản lý</a>
+                                <a href="{{ url_for('recruitment_post_detail', id=company_job.id) }}"
+                                   class="btn btn-outline-success btn-sm">Quản lý</a>
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,148 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Thông tin công ty{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Filter thời gian & trạng thái -->
+    <form method="GET" class="row g-2 mb-4 align-items-end">
+        <div class="col-auto">
+            <label>Khoảng thời gian:</label>
+            <select name="months" class="form-select">
+                <option value="3" {% if months==3 %}selected{% endif %}>3 tháng</option>
+                <option value="6" {% if months==6 %}selected{% endif %}>6 tháng</option>
+                <option value="12" {% if months==12 %}selected{% endif %}>12 tháng</option>
+                <option value="0" {% if months==0 %}selected{% endif %}>Tất cả</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label>Trạng thái:</label>
+            <select name="status" class="form-select">
+                <option value="all" {% if status=='all' %}selected{% endif %}>Tất cả</option>
+                <option value="Pending" {% if status=='Pending' %}selected{% endif %}>Pending</option>
+                <option value="Accepted" {% if status=='Accepted' %}selected{% endif %}>Accepted</option>
+                <option value="Rejected" {% if status=='Rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary">Áp dụng</button>
+        </div>
+    </form>
+
+    <div class="row">
+        <!-- Thông tin công ty -->
+        <div class="col-md-5 col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin công ty</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3 text-center">
+                            <label class="form-label">Logo công ty</label>
+                            <input type="file" name="logo" class="form-control mb-2">
+                                      {% if company.logo_url %}
+                                <img src="{{ url_for('static', filename='Image/logos/' ~ company.logo_url) }}"
+                                     alt="avatar"
+                                     class="img-fluid rounded-circle mt-2"
+                                     style="max-height:120px;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='Image/logos/default.png') }}"
+                                     alt="default avatar"
+                                     class="img-fluid rounded-circle mt-2"
+                                     style="max-height:120px;">
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tên công ty</label>
+                            <input type="text" name="name" class="form-control" value="{{ company.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" name="address" class="form-control" value="{{ company.address }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Website</label>
+                            <input type="text" name="website" class="form-control" value="{{ company.website }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">MST</label>
+                            <input type="text" name="mst" class="form-control" value="{{ company.mst }}">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Cập nhật thông tin</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ ứng viên -->
+        <div class="col-md-7 col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Thống kê ứng viên theo trạng thái</h5>
+                </div>
+                <div class="card-body" style="position: relative; height:400px;">
+                    <canvas id="applicationsChart" width="100%" height="100%"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('applicationsChart').getContext('2d');
+    const applicationsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels|tojson }},
+            datasets: [
+                {
+                    label: 'Pending',
+                    data: {{ chart_data['Pending']|tojson }},
+                    backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Accepted',
+                    data: {{ chart_data['Accepted']|tojson }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Rejected',
+                    data: {{ chart_data['Rejected']|tojson }},
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw + ' ứng viên';
+                        }
+                    }
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            scales: {
+                x: { stacked: true, title: { display: true, text: 'Tháng' } },
+                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Số lượng ứng viên' } }
+            }
+        }
+    });
+</script>
+{% endblock %}
