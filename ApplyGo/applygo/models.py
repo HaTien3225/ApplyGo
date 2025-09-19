@@ -7,28 +7,24 @@ from applygo import db, app
 
 
 class UserRole(Enum):
-    __table_args__ = {'extend_existing': True}
     CANDIDATE = "candidate"
     COMPANY = "company"
     ADMIN = "admin"
 
 
 class ApplicationStatus(Enum):
-    __table_args__ = {'extend_existing': True}
     PENDING = "Pending"
     ACCEPTED = "Accepted"
     REJECTED = "Rejected"
 
 
 class JobStatus(Enum):
-    __table_args__ = {'extend_existing': True}
     OPEN = "Open"
     CLOSED = "Closed"
     PAUSED = "Paused"
 
 
 class CompanyStatus(Enum):
-    __table_args__ = {'extend_existing': True}
     PENDING = "Pending"
     APPROVED = "Approved"
     DECLINED = "Declined"
@@ -106,6 +102,7 @@ class Job(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    requirements=db.Column(db.Text, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     salary = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(20), nullable=False, default=JobStatus.OPEN.value)
