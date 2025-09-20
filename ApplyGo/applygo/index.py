@@ -128,6 +128,8 @@ def edit_recruitment_post(id):
     description = request.form.get('description', '').strip()
     location = request.form.get('location', '').strip()
     status = request.form.get('status', '').strip()
+    requirement = request.form.get('requirement', '').strip()
+
     def clean_html(text):
         return BeautifulSoup(text, "html.parser").get_text()
 
@@ -141,6 +143,13 @@ def edit_recruitment_post(id):
     elif len(title) > 200:
         flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
         return redirect(url_for('edit_recruitment_post', id=id))
+
+    if not requirement:
+        flash("Chưa nhập yêu cầu tin tuyển dụng", "danger")
+        return redirect(url_for('create_recruitment_post'))
+    elif len(requirement) > 5000:
+        flash("Yêu cầu không được vượt quá 5000 ký tự", "danger")
+        return redirect(url_for('create_recruitment_post'))
 
     if not salary:
         flash("Chưa nhập mức lương", "danger")
@@ -172,6 +181,7 @@ def edit_recruitment_post(id):
     job.description = description
     job.location = location
     job.status = status
+    job.requirements = requirement
     db.session.commit()
 
     flash("Cập nhật tin tuyển dụng thành công!", "success")
@@ -262,6 +272,7 @@ def create_recruitment_post():
         salary = request.form.get('salary', '').strip()
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
+        requirement = request.form.get('requirement', '').strip()
 
         def clean_html(text):
             soup = BeautifulSoup(text, "html.parser")
@@ -276,6 +287,13 @@ def create_recruitment_post():
             return redirect(url_for('create_recruitment_post'))
         elif len(title) > 200:
             flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
+            return redirect(url_for('create_recruitment_post'))
+
+        if not requirement:
+            flash("Chưa nhập yêu cầu tin tuyển dụng", "danger")
+            return redirect(url_for('create_recruitment_post'))
+        elif len(requirement) > 5000:
+            flash("Yêu cầu không được vượt quá 5000 ký tự", "danger")
             return redirect(url_for('create_recruitment_post'))
 
         if not salary:
@@ -303,7 +321,8 @@ def create_recruitment_post():
             title=title,
             salary=salary,
             description=description,
-            location=location
+            location=location,
+            requirements=requirement,
         )
         db.session.add(job)
         db.session.commit()

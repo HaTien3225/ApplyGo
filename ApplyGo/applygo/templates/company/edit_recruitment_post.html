@@ -114,6 +114,12 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="description" class="form-label">Yêu cầu</label>
+                            <textarea name="requirement" id="requirement" rows="6"
+                                      class="form-control" maxlength="5000" required>{{ job.requirements }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="salary" class="form-label">Mức lương (VNĐ)</label>
                             <input type="text" name="salary" id="salary" value="{{ job.salary }}"
                                    class="form-control" min="0" required>
