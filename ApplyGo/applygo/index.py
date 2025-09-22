@@ -5,8 +5,11 @@ from bs4 import BeautifulSoup
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy import extract
+from unicodedata import category
+
 from applygo import app, db, dao, login
-from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications, get_my_applications
+from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications, get_my_applications, \
+    get_all_cate
 from applygo.decorators import loggedin, role_required
 from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category, \
     ApplicationStatus
@@ -129,6 +132,7 @@ def edit_recruitment_post(id):
     location = request.form.get('location', '').strip()
     status = request.form.get('status', '').strip()
     requirement = request.form.get('requirement', '').strip()
+    cate_id = int(request.form.get('cate_id', '').strip())
 
     def clean_html(text):
         return BeautifulSoup(text, "html.parser").get_text()
@@ -136,6 +140,15 @@ def edit_recruitment_post(id):
     title = clean_html(title)
     description = clean_html(description)
     location = clean_html(location)
+    requirement = clean_html(requirement)
+
+    if cate_id == -1:
+        flash("Hãy chọn doanh mục", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
+
+    if Category.query.filter_by(id=cate_id).first() == None:
+        flash("Hãy chọn doanh mục", "danger")
+        return redirect(url_for('edit_recruitment_post', id=id))
 
     if not title:
         flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
@@ -149,14 +162,14 @@ def edit_recruitment_post(id):
         return redirect(url_for('create_recruitment_post'))
     elif len(requirement) > 5000:
         flash("Yêu cầu không được vượt quá 5000 ký tự", "danger")
-        return redirect(url_for('create_recruitment_post'))
+        return redirect(url_for('edit_recruitment_post', id=id))
 
     if not salary:
         flash("Chưa nhập mức lương", "danger")
-        return redirect(url_for('create_recruitment_post'))
+        return redirect(url_for('edit_recruitment_post', id=id))
     elif len(salary) > 20:
         flash("Mức lương quá dài", "danger")
-        return redirect(url_for('create_recruitment_post'))
+        return redirect(url_for('edit_recruitment_post', id=id))
 
     if not description:
         flash("Chưa nhập mô tả công việc", "danger")
@@ -182,6 +195,7 @@ def edit_recruitment_post(id):
     job.location = location
     job.status = status
     job.requirements = requirement
+    job.category_id = cate_id
     db.session.commit()
 
     flash("Cập nhật tin tuyển dụng thành công!", "success")
@@ -193,7 +207,7 @@ def edit_recruitment_post(id):
 @role_required(UserRole.COMPANY.value)
 def recruitment_post_detail(id):
     job = Job.query.get_or_404(id)
-
+    cates = get_all_cate()
 
     status = request.args.get("status")
     try:
@@ -213,7 +227,8 @@ def recruitment_post_detail(id):
         applications=applications,
         total_pages=total_pages,
         current_page=page,
-        current_status=status
+        current_status=status,
+        categorys = cates
     )
 
 
@@ -260,7 +275,7 @@ def recruitment_post_manager():
 
     jobs, total = get_jobs_by_company(company_id=company.id, sort_by_date_incr=sort_by, page_size=12, page=page, kw=kw,
                                       status=Jstatus)
-    print(jobs)
+    # print(jobs[6].category.name)
     return render_template('company/recruitment_post_manager.html', company_jobs=jobs, page=page)
 
 
@@ -273,6 +288,7 @@ def create_recruitment_post():
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         requirement = request.form.get('requirement', '').strip()
+        cate_id = int (request.form.get('cate_id', '').strip())
 
         def clean_html(text):
             soup = BeautifulSoup(text, "html.parser")
@@ -281,55 +297,72 @@ def create_recruitment_post():
         title = clean_html(title)
         description = clean_html(description)
         location = clean_html(location)
+        requirement = clean_html(requirement)
+        if cate_id == -1:
+            flash("Hãy chọn doanh mục", "danger")
+            return redirect(url_for('create_recruitment_post'))
+
+        if Category.query.filter_by(id=cate_id).first() == None:
+            flash("Hãy chọn doanh mục", "danger")
+            return redirect(url_for('create_recruitment_post'))
 
         if not title:
             flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         elif len(title) > 200:
             flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
 
         if not requirement:
             flash("Chưa nhập yêu cầu tin tuyển dụng", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         elif len(requirement) > 5000:
             flash("Yêu cầu không được vượt quá 5000 ký tự", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
 
         if not salary:
             flash("Chưa nhập mức lương", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         elif len(salary) > 20:
             flash("Mức lương quá dài", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         if not description:
             flash("Chưa nhập mô tả công việc", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         elif len(description) > 5000:
             flash("Mô tả công việc không được vượt quá 5000 ký tự", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
 
         if not location:
             flash("Chưa nhập nơi làm việc", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
         elif len(location) > 100:
             flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
-            return redirect(url_for('create_recruitment_post'))
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement,o_cate=Category.query.filter_by(id=cate_id).first())
 
-        job = Job(
-            company_id=current_user.company.id,
-            title=title,
-            salary=salary,
-            description=description,
-            location=location,
-            requirements=requirement,
-        )
-        db.session.add(job)
-        db.session.commit()
+
+        try:
+            job = Job(
+                company_id=current_user.company.id,
+                title=title,
+                salary=salary,
+                description=description,
+                location=location,
+                requirements=requirement,
+                category_id=cate_id,
+            )
+            db.session.add(job)
+            db.session.commit()
+        except:
+            flash("Lỗi khi tạo đơn đăng tuyển", "warning")
+            return render_template('company/create_recruitment_post.html',title=title,salary=salary,description=description,location=location,requirement=requirement)
 
         flash("Tạo tin tuyển dụng thành công!", "success")
         return redirect(url_for('recruitment_post_manager'))
-    return render_template('company/create_recruitment_post.html')
+
+    cates = get_all_cate()
+
+    return render_template('company/create_recruitment_post.html',categorys=cates)
 
 @app.route('/application/<int:id>/detail', methods=['GET'])
 @login_required

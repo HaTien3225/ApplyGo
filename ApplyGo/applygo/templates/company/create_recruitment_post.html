@@ -15,30 +15,52 @@
                         <!-- Title -->
                         <div class="mb-3">
                             <label for="title" class="form-label">Tiêu đề</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
+                            <input type="text" class="form-control" id="title" name="title" value="{{title}}" required>
                         </div>
 
                         <!-- Description -->
                         <div class="mb-3">
                             <label for="description" class="form-label">Mô tả công việc</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                   required>{{description}}</textarea>
                         </div>
+
+                        <label class="form-label">Chọn doanh mục</label>
+                        <div class="dropdown my-3">
+                            <button class="btn btn-secondary dropdown-toggle"
+                                    type="button"
+                                    id="dropdownMenu"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    style="border-radius:10px; background-color:white !important; color:black !important; border:1px solid black !important;">
+                                {{ o_cate.name if o_cate else "Chọn doanh mục" }}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                <li><a class="dropdown-item" href="#" data-value="-1">Chọn doanh mục</a></li>
+                                {% for category in categorys %}
+                                <li><a class="dropdown-item" href="#" data-value="{{ category.id }}">{{ category.name
+                                    }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <input type="hidden" name="cate_id" id="selectedOption" value="{{ o_cate.id if o_cate else '-1' }}">
 
                         <div class="mb-3">
                             <label for="description" class="form-label">Yêu cầu</label>
-                            <textarea class="form-control" id="requirement" name="requirement" rows="4" required></textarea>
+                            <textarea class="form-control" id="requirement" name="requirement" rows="4"
+                                 required>{{requirement}}</textarea>
                         </div>
 
                         <!-- Location -->
                         <div class="mb-3">
                             <label for="location" class="form-label">Địa điểm</label>
-                            <input type="text" class="form-control" id="location" name="location" required>
+                            <input type="text" class="form-control" id="location" name="location" value="{{location}}" required>
                         </div>
 
                         <!-- Salary -->
                         <div class="mb-3">
                             <label for="salary" class="form-label">Mức lương </label>
-                            <input type="text" class="form-control" id="salary" name="salary" required>
+                            <input type="text" class="form-control" id="salary" name="salary" value="{{salary}}" required>
                         </div>
 
                         <!-- Actions -->
@@ -52,4 +74,20 @@
         </div>
     </div>
 </div>
+<script>
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    const dropdownButton = document.getElementById('dropdownMenu');
+    const hiddenInput = document.getElementById('selectedOption');
+
+    dropdownItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        let value = this.getAttribute('data-value');
+        let text = this.textContent;
+
+        dropdownButton.textContent = text; // đổi text của nút dropdown
+        hiddenInput.value = value;        // gán vào input hidden để submit
+      });
+    });
+</script>
 {% endblock %}
