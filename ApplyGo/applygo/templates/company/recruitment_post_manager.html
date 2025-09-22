@@ -3,70 +3,65 @@
 {% block title %}Trang chủ - ApplyGO{% endblock %}
 
 {% block content %}
-<body style="padding: 100px">
-<div class="container-fluid d-flex">
-    <p class="h2" style="color:#0dcaf0">Các đơn ứng tuyển đã đăng</p>
-</div>
+<body>
+<div class="container-fluid" style="min-height: 100vh;">
 
-<div class="container-fluid d-flex flex-row" style="height: 100vh;">
+    <div class="row pt-4">
+        <div class="col-12">
+            <p class="h2 text-info">Các đơn ứng tuyển đã đăng</p>
+        </div>
+    </div>
 
-    <!-- Sidebar -->
-    <form class="room shadow d-flex flex-column p-3"
-          style="flex: 0 0 15%; background-color: #f8f9fa; height: 100%;"
-          method="get">
+    <div class="row">
+        <div class="col-12 col-md-3">
+            <form class="shadow d-flex flex-column p-3 mb-4"
+                  style="background-color: #f8f9fa;"
+                  method="get">
 
-        <!-- Trang -->
-        <p class="h5 text-info mb-3 text-center">Trang : {{page}}</p>
+                <p class="h5 text-info mb-3 text-center">Trang : {{page}}</p>
 
-        <!-- Search + Button -->
-        <div class="input-group input-group-sm mb-3">
-            <input type="text" class="form-control" name="kw" value="{{ kw or '' }}" placeholder="Tìm kiếm...">
-            <button class="btn btn-outline-primary" type="submit">Search</button>
+                <div class="input-group input-group-sm mb-3">
+                    <input type="text" class="form-control" name="kw" value="{{ kw or '' }}" placeholder="Tìm kiếm...">
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </div>
+
+                <div class="btn-group btn-group-sm mb-3" role="group" aria-label="Sort">
+                    <input type="radio" class="btn-check" name="sort" id="sortAsc" value="asc"
+                           {% if sort== 'asc' %}checked{% endif %}>
+                    <label class="btn btn-outline-secondary" for="sortAsc">Ngày ↑</label>
+
+                    <input type="radio" class="btn-check" name="sort" id="sortDesc" value="desc"
+                           {% if sort== 'desc' or not sort %}checked{% endif %}>
+                    <label class="btn btn-outline-secondary" for="sortDesc">Ngày ↓</label>
+                </div>
+
+
+                <div class="mb-3">
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="" {% if not status %}selected{% endif %}>Tất cả</option>
+                        <option value="OPEN" {% if status==
+                        'OPEN' %}selected{% endif %}>OPEN</option>
+                        <option value="CLOSED" {% if status==
+                        'CLOSED' %}selected{% endif %}>CLOSED</option>
+                        <option value="PAUSED" {% if status==
+                        'PAUSED' %}selected{% endif %}>PAUSED</option>
+                    </select>
+                </div>
+
+                <ul class="pagination pagination-sm mb-3 justify-content-center">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <button class="page-link" type="submit" name="page" value="{{ page-1 if page > 1 else 1 }}">‹</button>
+                    </li>
+                    <li class="page-item">
+                        <button class="page-link" type="submit" name="page" value="{{ page+1 }}">›</button>
+                    </li>
+                </ul>
+
+                <a href="/recruitment-post/create" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
+            </form>
         </div>
 
-        <!-- Sort radio -->
-        <div class="btn-group btn-group-sm mb-3" role="group" aria-label="Sort">
-            <input type="radio" class="btn-check" name="sort" id="sortAsc" value="asc"
-                   {% if sort== 'asc' %}checked{% endif %}>
-            <label class="btn btn-outline-secondary" for="sortAsc">Ngày ↑</label>
-
-            <input type="radio" class="btn-check" name="sort" id="sortDesc" value="desc"
-                   {% if sort== 'desc' or not sort %}checked{% endif %}>
-            <label class="btn btn-outline-secondary" for="sortDesc">Ngày ↓</label>
-        </div>
-
-
-        <!-- Status dropdown -->
-        <div class="mb-3">
-            <select class="form-select form-select-sm" name="status">
-                <option value="" {% if not status %}selected{% endif %}>Tất cả</option>
-                <option value="OPEN" {% if status==
-                'OPEN' %}selected{% endif %}>OPEN</option>
-                <option value="CLOSED" {% if status==
-                'CLOSED' %}selected{% endif %}>CLOSED</option>
-                <option value="PAUSED" {% if status==
-                'PAUSED' %}selected{% endif %}>PAUSED</option>
-            </select>
-        </div>
-
-        <!-- Pagination -->
-        <ul class="pagination pagination-sm mb-3 justify-content-center">
-            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                <button class="page-link" type="submit" name="page" value="{{ page-1 if page > 1 else 1 }}">‹</button>
-            </li>
-            <li class="page-item">
-                <button class="page-link" type="submit" name="page" value="{{ page+1 }}">›</button>
-            </li>
-        </ul>
-
-        <!-- Nút Tạo mới -->
-        <a href="/recruitment-post/create" class="btn btn-sm btn-success mt-auto">+ Tạo mới</a>
-    </form>
-
-    <!-- Content -->
-    <div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
-        <!-- Scrollable job list -->
-        <div class="flex-grow-1 overflow-auto p-4">
+        <div class="col-12 col-md-9">
             <div class="row g-4">
                 {% for company_job in company_jobs %}
                 <div class="col-md-6 col-lg-4">
@@ -76,6 +71,9 @@
                             <p class="small text-secondary">
                                 <i class="bi bi-geo-alt"></i> {{ company_job.location or "Toàn quốc" }}
                                 </p>
+                             <p class="large text-secondary">
+                                <span class="badge bg-secondary">{{ company_job.category.name }}</span>
+                            </p>
                             {% if company_job.status == "Open" %}
                             <span class="badge bg-success">OPEN</span>
                             {% elif company_job.status == "Paused" %}
@@ -83,6 +81,7 @@
                             {% elif company_job.status == "Closed" %}
                             <span class="badge bg-danger">CLOSED</span>
                             {% endif %}
+
                             <p class="small text-secondary">
                                 <i class="bi bi-clock"></i> Đăng vào : {{ company_job.created_at }}
                             </p>

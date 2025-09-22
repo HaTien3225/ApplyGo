@@ -113,6 +113,26 @@
                                       class="form-control" maxlength="5000" required>{{ job.description }}</textarea>
                         </div>
 
+                        <label class="form-label">Chọn doanh mục</label>
+                        <div class="dropdown my-3">
+                            <button class="btn btn-secondary dropdown-toggle"
+                                    type="button"
+                                    id="dropdownMenu"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    style="border-radius:10px; background-color:white !important; color:black !important; border:1px solid black !important;">
+                                {{ job.category.name if job.category else "Chọn doanh mục" }}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+                                <li><a class="dropdown-item" href="#" data-value="-1">Chọn doanh mục</a></li>
+                                {% for category in categorys %}
+                                <li><a class="dropdown-item" href="#" data-value="{{ category.id }}">{{ category.name
+                                    }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <input type="hidden" name="cate_id" id="selectedOption" value="{{ job.category.id if job.category else '-1' }}">
+
                         <div class="mb-3">
                             <label for="description" class="form-label">Yêu cầu</label>
                             <textarea name="requirement" id="requirement" rows="6"
@@ -156,4 +176,20 @@
         </div>
     </div>
 </div>
+<script>
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    const dropdownButton = document.getElementById('dropdownMenu');
+    const hiddenInput = document.getElementById('selectedOption');
+
+    dropdownItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        let value = this.getAttribute('data-value');
+        let text = this.textContent;
+
+        dropdownButton.textContent = text; // đổi text của nút dropdown
+        hiddenInput.value = value;        // gán vào input hidden để submit
+      });
+    });
+</script>
 {% endblock %}

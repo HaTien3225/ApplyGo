@@ -200,3 +200,7 @@ def get_my_applications(candidate_id):
         }
         for a in apps
     ]
+
+def get_all_cate():
+    return Category.query.all()
+
