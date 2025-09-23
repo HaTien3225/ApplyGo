@@ -14,7 +14,7 @@ from sqlalchemy import extract, func
 from applygo import app, db
 from applygo.models import (
     User, Company, Job, Application, CandidateProfile,
-    UserRole, ApplicationStatus, JobStatus
+    UserRole, ApplicationStatus, JobStatus, CompanyStatus
 )
 
 
@@ -133,6 +133,7 @@ class UserForm(Form):
 class CompanyForm(Form):
     name = StringField("Tên công ty", validators=[DataRequired()])
     address = StringField("Địa chỉ", validators=[DataRequired()])
+    status = SelectField("Trạng thái", choices=[(r.value, r.value) for r in CompanyStatus], validators=[DataRequired()], coerce=str)
     website = StringField("Website")
     mst = StringField("Mã số thuế")
     logo = FileField("Logo công ty")
@@ -167,7 +168,7 @@ class ApplicationForm(Form):
 
 
 class CompanyApprovalView(AuthenticatedView):
-    form = UserForm
+    form = CompanyApprovalForm
     column_list = ["id", "name", "address", "website", "mst", "status", "user.username", "logo_url"]
     column_labels = {
         "name": "Tên công ty",
