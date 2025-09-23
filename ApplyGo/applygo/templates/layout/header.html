@@ -63,6 +63,7 @@
                         {% if current_user.is_candidate() %}
                         <li><a class="dropdown-item" href="/candidate/profile">Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="/candidate/cv/manage">Quản lý CV</a></li>
+                        <li><a class="dropdown-item" href="/upgrade/employer">Đăng ký làm nhà tuyển dụng</a> </li>
                         {% elif current_user.is_company() %}
                         <li><a class="dropdown-item" href="/company/profile">Thông tin công ty</a></li>
                         <li><a class="dropdown-item" href="/recruitment-post-manager">Quản lý tuyển dụng</a></li>
