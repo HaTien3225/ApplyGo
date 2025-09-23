@@ -7,6 +7,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
 from markupsafe import Markup
 from wtforms import FileField, SelectField
+from wtforms.fields.simple import StringField
+from wtforms.form import Form
 from wtforms.validators import DataRequired
 from sqlalchemy import extract, func
 from applygo import app, db
@@ -122,7 +124,50 @@ def popup_image_formatter(view, context, model, name, folder="Image"):
     """)
 
 
+class UserForm(Form):
+    username = StringField("Tên đăng nhập", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
+    role = SelectField("Vai trò", choices=[(r.value, r.value) for r in UserRole], validators=[DataRequired()], coerce=str)
+    image = FileField("Ảnh đại diện")
+
+class CompanyForm(Form):
+    name = StringField("Tên công ty", validators=[DataRequired()])
+    address = StringField("Địa chỉ", validators=[DataRequired()])
+    website = StringField("Website")
+    mst = StringField("Mã số thuế")
+    logo = FileField("Logo công ty")
+
+class CompanyApprovalForm(CompanyForm):
+    status = SelectField(
+        "Trạng thái",
+        choices=[("Pending", "Chờ duyệt"), ("Approved", "Đã duyệt"), ("Rejected", "Từ chối")],
+        validators=[DataRequired()],
+        coerce=str
+    )
+
+class JobForm(Form):
+    title = StringField("Tiêu đề", validators=[DataRequired()])
+    location = StringField("Địa điểm", validators=[DataRequired()])
+    salary = StringField("Mức lương")
+    status = SelectField(
+        "Trạng thái",
+        choices=[(s.value, s.value) for s in JobStatus],
+        validators=[DataRequired()],
+        coerce=str
+    )
+
+class ApplicationForm(Form):
+    status = SelectField(
+        "Trạng thái",
+        choices=[(s.value, s.value) for s in ApplicationStatus],
+        validators=[DataRequired()],
+        coerce=str
+    )
+
+
+
 class CompanyApprovalView(AuthenticatedView):
+    form = UserForm
     column_list = ["id", "name", "address", "website", "mst", "status", "user.username", "logo_url"]
     column_labels = {
         "name": "Tên công ty",
@@ -135,18 +180,6 @@ class CompanyApprovalView(AuthenticatedView):
     }
     column_formatters = {
         "logo_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/logos")
-    }
-
-    form_overrides = {"status": SelectField}
-    form_args = {
-        "status": {
-            "choices": [
-                ("Pending", "Chờ duyệt"),
-                ("Approved", "Đã duyệt"),
-                ("Rejected", "Từ chối")
-            ],
-            "validators": [DataRequired()]
-        }
     }
 
     def update_model(self, form, model):
@@ -171,6 +204,7 @@ class CompanyApprovalView(AuthenticatedView):
 
 
 class UserView(AuthenticatedView):
+    form = UserForm
     column_list = ["id", "username", "email", "role", "company.name",
                    "candidate_profile.full_name", "image_url"]
     column_searchable_list = ["username", "email"]
@@ -186,17 +220,10 @@ class UserView(AuthenticatedView):
     column_formatters = {
         "image_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/avatars")
     }
-    form_extra_fields = {"image": FileField("Ảnh đại diện")}
-    form_overrides = {"role": SelectField}
-    form_args = {
-        "role": {
-            "choices": [(r.name, r.value) for r in UserRole],
-            "validators": [DataRequired()]
-        }
-    }
 
 
 class ApplicationView(AuthenticatedView):
+    form = ApplicationForm
     column_list = ["id", "candidate_profile.full_name", "job.title", "status", "applied_at"]
     column_searchable_list = ["candidate_profile.full_name", "job.title"]
     column_filters = ["status"]
@@ -206,16 +233,10 @@ class ApplicationView(AuthenticatedView):
         "status": "Trạng thái",
         "applied_at": "Ngày nộp"
     }
-    form_overrides = {"status": SelectField}
-    form_args = {
-        "status": {
-            "choices": [(s.name, s.value) for s in ApplicationStatus],
-            "validators": [DataRequired()]
-        }
-    }
 
 
 class JobView(AuthenticatedView):
+    form = JobForm
     column_list = ["id", "title", "company.name", "location", "salary", "status", "created_at"]
     column_searchable_list = ["title", "company.name"]
     column_filters = ["company.name", "location", "status", "created_at"]
@@ -227,16 +248,10 @@ class JobView(AuthenticatedView):
         "status": "Trạng thái",
         "created_at": "Ngày tạo"
     }
-    form_overrides = {"status": SelectField}
-    form_args = {
-        "status": {
-            "choices": [(s.name, s.value) for s in JobStatus],
-            "validators": [DataRequired()]
-        }
-    }
 
 
 class CompanyView(AuthenticatedView):
+    form = CompanyForm
     column_list = ["id", "name", "address", "user.username", "logo_url"]
     column_searchable_list = ["name", "address"]
     column_labels = {
@@ -248,7 +263,6 @@ class CompanyView(AuthenticatedView):
     column_formatters = {
         "logo_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/logos")
     }
-    form_extra_fields = {"logo": FileField("Logo công ty")}
 
 
 class CandidateProfileView(AuthenticatedView):
