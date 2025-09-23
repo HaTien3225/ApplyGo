@@ -117,7 +117,7 @@ def seed_data():
                 email=f"company{i}@example.com",
                 password=hashlib.md5("123456".encode("utf-8")).hexdigest(),
                 role=UserRole.COMPANY.value,
-                image_url=random.choice(company_logos)  # ảnh user của công ty
+                image_url=random.choice(user_images)  # ảnh user của công ty
             )
             db.session.add(user)
             db.session.commit()
