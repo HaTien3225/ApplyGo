@@ -1,19 +1,19 @@
 from datetime import datetime, timedelta
 from os import abort
-
 from bs4 import BeautifulSoup
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy import extract
 from unicodedata import category
+from werkzeug.security import generate_password_hash
 
 from applygo import app, db, dao, login
 from applygo.dao import get_jobs_by_company, upload_file_to_cloudinary, get_applications, get_my_applications, \
     get_all_cate
 from applygo.decorators import loggedin, role_required
+from applygo.forms import EmployerRegisterForm
 from applygo.models import User, Job, Application, CandidateProfile, CvTemplate, UserRole, JobStatus, Company, Category, \
-    ApplicationStatus
-
+    ApplicationStatus, CompanyStatus
 
 import os
 import math
@@ -104,6 +104,40 @@ def register():
 
     return render_template('auth/register.html', err_msg=err_msg)
 
+
+
+@app.route("/upgrade/employer", methods=["GET", "POST"])
+@login_required
+def upgrade_employer():
+    form = EmployerRegisterForm()
+    err_msg = None
+
+    if form.validate_on_submit():
+        try:
+            if current_user.role == UserRole.CANDIDATE.value:
+                current_user.role = UserRole.COMPANY.value
+                db.session.commit()
+
+            if not Company.query.filter_by(user_id=current_user.id).first():
+                company = Company(
+                    user_id=current_user.id,
+                    name=form.company_name.data,
+                    address=form.address.data,
+                    website=form.website.data,
+                    mst=form.mst.data,
+                    status=CompanyStatus.PENDING.value
+                )
+                db.session.add(company)
+                db.session.commit()
+
+            flash("Nâng cấp thành Nhà tuyển dụng thành công! Vui lòng chờ admin duyệt.", "success")
+            return redirect(url_for("index"))
+
+        except Exception as e:
+            db.session.rollback()
+            err_msg = f"Lỗi khi nâng cấp: {str(e)}"
+
+    return render_template("auth/upgrade_employer.html", form=form, err_msg=err_msg)
 
 @app.route('/logout/')
 @login_required

@@ -1,0 +1,38 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Đăng ký Nhà tuyển dụng{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center text-primary mb-4">Đăng ký Nhà tuyển dụng</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.company_name.label }}
+      {{ form.company_name(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.address.label }}
+      {{ form.address(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.website.label }}
+      {{ form.website(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.mst.label }}
+      {{ form.mst(class="form-control") }}
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+  </form>
+
+  {% if err_msg %}
+  <div class="alert alert-danger mt-2">{{ err_msg }}</div>
+  {% endif %}
+</div>
+{% endblock %}

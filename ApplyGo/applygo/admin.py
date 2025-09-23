@@ -108,6 +108,51 @@ def popup_image_formatter(view, context, model, name):
     </div>
     """)
 
+class CompanyApprovalView(AuthenticatedView):
+    column_list = ["id", "name", "address", "website", "mst", "status", "user.username", "logo_url"]
+    column_labels = {
+        "name": "Tên công ty",
+        "address": "Địa chỉ",
+        "website": "Website",
+        "mst": "Mã số thuế",
+        "status": "Trạng thái",
+        "user.username": "Người quản lý",
+        "logo_url": "Logo"
+    }
+    column_formatters = {"logo_url": popup_image_formatter}
+
+    form_overrides = {"status": SelectField}
+    form_args = {
+        "status": {
+            "choices": [
+                ("Pending", "Chờ duyệt"),
+                ("Approved", "Đã duyệt"),
+                ("Rejected", "Từ chối")
+            ],
+            "validators": [DataRequired()]
+        }
+    }
+
+    def update_model(self, form, model):
+        try:
+            old_status = model.status
+            form.populate_obj(model)
+
+            db.session.commit()
+            flash(f"Cập nhật trạng thái công ty {model.name} thành công!", "success")
+
+            if old_status != "Approved" and model.status == "Approved":
+                if model.user and model.user.role != "company":
+                    model.user.role = "company"
+                    db.session.commit()
+                    flash(f"Người dùng {model.user.username} đã trở thành Nhà tuyển dụng!", "info")
+
+            return True
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Lỗi khi duyệt công ty: {e}", "error")
+            return False
+
 
 class UserView(AuthenticatedView):
     column_list = ["id", "username", "email", "role", "company.name",
@@ -291,7 +336,8 @@ admin = Admin(app, name="Quản lý ApplyGO", template_mode="bootstrap4",
               url="/admin", index_view=MyAdminIndexView())
 
 admin.add_view(UserView(User, db.session, name="Người dùng"))
-admin.add_view(CompanyView(Company, db.session, name="Công ty"))
+admin.add_view(CompanyView(Company, db.session, name="Công ty", endpoint="company_admin"))
+admin.add_view(CompanyApprovalView(Company, db.session, name="Kiểm duyệt Công ty", endpoint="company_approval"))
 admin.add_view(JobView(Job, db.session, name="Tin tuyển dụng"))
 admin.add_view(ApplicationView(Application, db.session, name="Ứng tuyển"))
 admin.add_view(CandidateProfileView(CandidateProfile, db.session, name="Hồ sơ ứng viên"))
