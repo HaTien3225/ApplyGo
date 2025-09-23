@@ -90,10 +90,23 @@ class AuthenticatedView(ModelView):
             return False
 
 
-def popup_image_formatter(view, context, model, name):
+from flask import url_for
+from markupsafe import Markup
+
+
+def popup_image_formatter(view, context, model, name, folder="Image"):
+    """
+    Formatter ảnh cho Flask-Admin:
+    - Nếu url đầy đủ (http...), dùng trực tiếp
+    - Nếu url local, thêm url_for với thư mục folder
+    """
     url = getattr(model, name, None)
     if not url:
         return ""
+
+    if not url.startswith("http"):
+        url = url_for('static', filename=f'{folder}/{url}')
+
     return Markup(f"""
     <img src="{url}" style="max-height:50px; cursor:pointer;" 
          data-bs-toggle="modal" data-bs-target="#imageModal{model.id}" />
@@ -108,6 +121,7 @@ def popup_image_formatter(view, context, model, name):
     </div>
     """)
 
+
 class CompanyApprovalView(AuthenticatedView):
     column_list = ["id", "name", "address", "website", "mst", "status", "user.username", "logo_url"]
     column_labels = {
@@ -119,7 +133,9 @@ class CompanyApprovalView(AuthenticatedView):
         "user.username": "Người quản lý",
         "logo_url": "Logo"
     }
-    column_formatters = {"logo_url": popup_image_formatter}
+    column_formatters = {
+        "logo_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/logos")
+    }
 
     form_overrides = {"status": SelectField}
     form_args = {
@@ -167,7 +183,9 @@ class UserView(AuthenticatedView):
         "candidate_profile.full_name": "Tên ứng viên",
         "image_url": "Ảnh đại diện"
     }
-    column_formatters = {"image_url": popup_image_formatter}
+    column_formatters = {
+        "image_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/avatars")
+    }
     form_extra_fields = {"image": FileField("Ảnh đại diện")}
     form_overrides = {"role": SelectField}
     form_args = {
@@ -227,7 +245,9 @@ class CompanyView(AuthenticatedView):
         "user.username": "Người quản lý",
         "logo_url": "Logo"
     }
-    column_formatters = {"logo_url": popup_image_formatter}
+    column_formatters = {
+        "logo_url": lambda v, c, m, n: popup_image_formatter(v, c, m, n, folder="Image/logos")
+    }
     form_extra_fields = {"logo": FileField("Logo công ty")}
 
 
