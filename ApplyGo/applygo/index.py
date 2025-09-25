@@ -178,50 +178,50 @@ def edit_recruitment_post(id):
 
     if cate_id == -1:
         flash("Hãy chọn doanh mục", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if Category.query.filter_by(id=cate_id).first() == None:
         flash("Hãy chọn doanh mục", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if not title:
         flash("Chưa nhập tiêu đề tin tuyển dụng", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
     elif len(title) > 200:
         flash("Tiêu đề không được vượt quá 200 ký tự", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if not requirement:
         flash("Chưa nhập yêu cầu tin tuyển dụng", "danger")
-        return redirect(url_for('create_recruitment_post'))
+        return redirect(url_for('recruitment_post_detail'))
     elif len(requirement) > 5000:
         flash("Yêu cầu không được vượt quá 5000 ký tự", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if not salary:
         flash("Chưa nhập mức lương", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
     elif len(salary) > 20:
         flash("Mức lương quá dài", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if not description:
         flash("Chưa nhập mô tả công việc", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
     elif len(description) > 5000:
         flash("Mô tả công việc không được vượt quá 5000 ký tự", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if not location:
         flash("Chưa nhập nơi làm việc", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
     elif len(location) > 100:
         flash("Nơi làm việc không được vượt quá 100 ký tự", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     if status not in ["Open", "Closed", "Paused"]:
         flash("Trạng thái không hợp lệ", "danger")
-        return redirect(url_for('edit_recruitment_post', id=id))
+        return redirect(url_for('recruitment_post_detail', id=id))
 
     job.title = title
     job.salary = salary
